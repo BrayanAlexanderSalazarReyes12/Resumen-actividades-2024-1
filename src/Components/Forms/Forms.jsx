@@ -262,14 +262,27 @@ function Forms() {
             </div>
             <div>
               <label className="block mb-2 font-medium text-gray-700">Tipo de actividad<span className="text-red-500">*</span></label>
-              <input
-                type="text"
+              <select 
+                value={form.tipoActividad} 
+                onChange={handleChange} 
                 name="tipoActividad"
-                value={form.tipoActividad}
-                onChange={handleChange}
-                required
                 className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
+              >
+                <option value="">Seleccionar...</option>
+                <option value="diplomados">Diplomados</option>
+                <option value="cursos-cortos">Cursos cortos</option>
+                <option value="coloquios">Coloquios</option>
+                <option value="conversatorios">Conversatorios</option>
+                <option value="talleres">Talleres</option>
+                <option value="seminarios">Seminarios</option>
+                <option value="congreso">Congreso</option>
+                <option value="estequloshop">Estequloshop</option>
+                <option value="feria-de-emprendimiento">Feria de Emprendimiento</option>
+                <option value="exposicion-de-afiches">Exposición de afiches</option>
+                <option value="maratones">Maratones</option>
+                <option value="concurso-de-puente">Concurso de puente</option>
+                <option value="otra">Otra...</option>
+              </select>
             </div>
             <div>
               <label className="block mb-2 font-medium text-gray-700">Fecha de inicio<span className="text-red-500">*</span></label>
