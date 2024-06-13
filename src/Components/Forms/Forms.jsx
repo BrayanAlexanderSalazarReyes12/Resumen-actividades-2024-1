@@ -20,7 +20,7 @@ function Forms() {
         monto: '',
         duracionHoras: '',
         espacioFisico: '',
-        nesesidades: '',
+        nesesidades: [],
         espacio: '',
         apoyoComunicacion: '',
         ponentes: '',
@@ -128,6 +128,41 @@ function Forms() {
         SetStep(step + 1)
     }
     
+    const resetform = () => {
+      SetForm({
+        fechaDiligenciamiento: '',
+        periodoAcademico: '',
+        nombreActividad: '',
+        codigoActividad: '',
+        tipoActividad: '',
+        fechaInicio: '',
+        fechaFinal: '',
+        unidadResponsable: '',
+        salonPosgrado: '',
+        tieneCosto: 'no',
+        monto: '',
+        duracionHoras: '',
+        espacioFisico: '',
+        nesesidades: [],
+        espacio: '',
+        apoyoComunicacion: '',
+        ponentes: '',
+        documento: '',
+        numDocumento: '',
+        Nombres: '',
+        PrimerApellido: '',
+        SegundoApellido: '',
+        Niveldeformacion: '',
+        asistemciapdf: null,
+        correo: '',
+        Programaacademico: '',
+        Estamento: '',
+        numDocumentoidentificacion: '',
+        nombreapellido: '',
+        Vinculacion: ''
+      })
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const blob = await pdf(<Certificate/>).toBlob();
@@ -141,6 +176,11 @@ function Forms() {
         // Subir PDF a Firebase Storage
         const fileName = 'certificado.pdf';
         
+        //vairables para descombertir los array
+        let text_espaciofisico
+        let text_nesesidades
+        let text_apoyocomunicacion
+
         try {
             // Obtener el nombre del usuario (supongamos que está en el estado `form.nombreActividad`)
             const nombreUsuario = form.nombreActividad + form.codigoActividad + form.nombreapellido; // Reemplaza esto con tu lógica para obtener el nombre del usuario
@@ -168,6 +208,10 @@ function Forms() {
                 // Obtener la URL del archivo adicional subido
                 const additionalDownloadURL = await getDownloadURL(additionalFileRef);
 
+                //descompone el array de nesesidades y espacio fisico para guardarlo en firebase
+                text_nesesidades = form.nesesidades.join(',');
+                text_espaciofisico = form.espacio.join(',');
+                text_apoyocomunicacion = form.apoyoComunicacion.join(',');
                 // Crear documento en Firestore para el archivo adicional
                 await addDoc(collection(db, 'certificados'), {
                     id:form.codigoActividad,
@@ -183,9 +227,9 @@ function Forms() {
                     monto: form.monto,
                     duracionHoras: form.duracionHoras,
                     espacioFisico: form.espacioFisico,
-                    nesesidades: form.nesesidades,
-                    espacio: form.espacio,
-                    apoyoComunicacion : form.apoyoComunicacion,
+                    nesesidades: text_nesesidades,
+                    espacio: text_espaciofisico,
+                    apoyoComunicacion : text_apoyocomunicacion,
                     ponentes: form.Nombres +" "+ form.PrimerApellido +" "+ form.SegundoApellido,
                     certificado: downloadURL,
                     asistemciapdf: additionalDownloadURL,
@@ -201,6 +245,8 @@ function Forms() {
         }
     
         console.log('form Data:', form);
+        //restablece el formulario
+        resetform();
     }
 
     const handleFileChange = (e) => {
@@ -210,6 +256,41 @@ function Forms() {
             asistemciapdf: file
         })
     }
+
+    const handlecheckbox = (e) => {
+      const {name, value, type, checked} = e.target;
+      SetForm({
+        ...form,
+        [name]: checked ? [...form[name], value] : form[name].filter((option) => option !== value)
+      })
+    }
+
+    const options = [
+      { id: 1, label: 'Bombos' },
+      { id: 2, label: 'Mesas' },
+      { id: 3, label: 'Sillas' },
+      { id: 4, label: 'Arañas' }
+    ];
+
+    const options_espaciofisico = [
+      { id: 1, label: 'Aula Cruz Pombo' },
+      { id: 2, label: 'Salon Ivonne Durán' },
+      { id: 3, label: 'Salones de Multimedia' },
+      { id: 4, label: 'Pasillos' },
+      { id: 5, label: 'Lobby del Campus'},
+      { id: 6, label: 'Salones de Posgrados'},
+      { id: 7, label: 'Salones bloques A, B o C'}
+    ];
+
+    const options_apoyocomunicacion = [
+      { id: 1, label: 'Dibulgación página web de la UdC' },
+      { id: 2, label: 'Cubrimiento' },
+      { id: 3, label: 'Diseño de piezas' },
+      { id: 4, label: 'Publicación en redes de la facultad' },
+      { id: 5, label: 'Publicación en redes de la universidad'},
+      { id: 6, label: 'Otra...'}
+    ];
+
   return (
     <section className="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-lg shadow-lg mt-10 mb-10">
       <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Resumen actividades 2024-1</h1>
@@ -383,36 +464,57 @@ function Forms() {
             </div>
             <div>
               <label className="block mb-2 font-medium text-gray-700">Para el evento necesita<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="nesesidades"
-                value={form.nesesidades}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
+              {options.map((option) => (
+                <div key={option.id} className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    name="nesesidades"
+                    id={`option-${option.id}`}
+                    value={option.label}
+                    onChange={handlecheckbox}
+                    className="mr-2"
+                  />
+                  <label htmlFor={`option-${option.id}`} className="text-gray-700">
+                    {option.label}
+                  </label>
+                </div>
+              ))}
             </div>
             <div>
               <label className="block mb-2 font-medium text-gray-700">Espacio fisico<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="espacio"
-                value={form.espacio}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
+              {options_espaciofisico.map((option) => (
+                <div key={option.id} className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    name="espacio"
+                    id={`option-${option.id}`}
+                    value={option.label}
+                    onChange={handlecheckbox}
+                    className="mr-2"
+                  />
+                  <label htmlFor={`option-${option.id}`} className="text-gray-700">
+                    {option.label}
+                  </label>
+                </div>
+              ))}
             </div>
             <div>
               <label className="block mb-2 font-medium text-gray-700">Requerimiento de apoyo en comunicación<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="apoyoComunicacion"
-                value={form.apoyoComunicacion}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
+              {options_apoyocomunicacion.map((option) => (
+                <div key={option.id} className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    name="apoyoComunicacion"
+                    id={`option-${option.id}`}
+                    value={option.label}
+                    onChange={handlecheckbox}
+                    className="mr-2"
+                  />
+                  <label htmlFor={`option-${option.id}`} className="text-gray-700">
+                    {option.label}
+                  </label>
+                </div>
+              ))}
             </div>
             <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
               Siguiente
