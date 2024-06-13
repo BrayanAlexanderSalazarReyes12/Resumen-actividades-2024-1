@@ -23,14 +23,9 @@ function Forms() {
         nesesidades: [],
         espacio: '',
         apoyoComunicacion: '',
-        ponentes: '',
-        documento: '',
-        numDocumento: '',
-        Nombres: '',
-        PrimerApellido: '',
-        SegundoApellido: '',
-        Niveldeformacion: '',
+        ponentes: [{ ponente: '', documento: '', numDocumento: '', Nombres: '', PrimerApellido: '', SegundoApellido: '', Niveldeformacion: '', Vinculacion: '' }],
         asistemciapdf: null,
+        asistente: [{nombreapellido: '',numDocumentoidentificacion: '',Estamento: '',Programaacademico: '',email: ''}],
         correo: '',
         Programaacademico: '',
         Estamento: '',
@@ -38,6 +33,8 @@ function Forms() {
         nombreapellido: '',
         Vinculacion: ''
     })
+
+    const [pdfupload, SetPdfupload] = useState(false)
 
     const styles = StyleSheet.create({
         page: {
@@ -94,19 +91,31 @@ function Forms() {
                 <Text style={styles.text}>Nesesita: {form.nesesidades}</Text>
                 <Text style={styles.text}>Espacio fisico: {form.espacio}</Text>
                 <Text style={styles.text}>Requerimiento apoyo comunicacion: {form.apoyoComunicacion}</Text>
-                <Text style={styles.text}>Ponentes descripción: {form.ponentes}</Text>
-                <Text style={styles.text}>Tipo de documento: {form.documento}</Text>
-                <Text style={styles.text}>Numero de documento: {form.numDocumento}</Text>
-                <Text style={styles.text}>Nombres: {form.Nombres}</Text>
-                <Text style={styles.text}>Primer apellido: {form.PrimerApellido}</Text>
-                <Text style={styles.text}>Segundo apellido: {form.SegundoApellido}</Text>
-                <Text style={styles.text}>Nivel de formacion: {form.Niveldeformacion}</Text>
-                <Text style={styles.text}>Tipo de vinculacion: {form.Vinculacion}</Text>
-                <Text style={styles.text}>Nombres y apellidos: {form.nombreapellido}</Text>
-                <Text style={styles.text}>Documento de identificación: {form.numDocumentoidentificacion}</Text>
-                <Text style={styles.text}>Estamento al que pertenece: {form.Estamento}</Text>
-                <Text style={styles.text}>Programa academico al que pertenece: {form.Programaacademico}</Text>
-                <Text style={styles.text}>Correo electronico: {form.correo}</Text>
+                {/* Renderizar cada ponente */}
+                {form.ponentes.map((ponente, index) => (
+                  <View key={index} style={styles.section}>
+                    <Text style={styles.text}>Ponente {index + 1}:</Text>
+                    <Text style={styles.text}>Descripción: {ponente.ponente}</Text>
+                    <Text style={styles.text}>Tipo de documento: {ponente.documento}</Text>
+                    <Text style={styles.text}>Número de documento: {ponente.numDocumento}</Text>
+                    <Text style={styles.text}>Nombres: {ponente.Nombres}</Text>
+                    <Text style={styles.text}>Primer apellido: {ponente.PrimerApellido}</Text>
+                    <Text style={styles.text}>Segundo apellido: {ponente.SegundoApellido}</Text>
+                    <Text style={styles.text}>Nivel de formación: {ponente.Niveldeformacion}</Text>
+                    <Text style={styles.text}>Tipo de vinculación: {ponente.Vinculacion}</Text>
+                  </View>
+                ))}
+                {/* Renderizar cada asistente */}
+                {form.asistente.map((asistente, index_asis) => (
+                  <View key={index_asis} style={styles.section}>
+                    <Text style={styles.text}>Asistente {index_asis + 1}:</Text>
+                    <Text style={styles.text}>Nombres y apellidos: {asistente.nombreapellido}</Text>
+                    <Text style={styles.text}>Documento de identificación: {asistente.numDocumentoidentificacion}</Text>
+                    <Text style={styles.text}>Estamento al que pertenece: {asistente.Estamento}</Text>
+                    <Text style={styles.text}>Programa academico al que pertenece: {asistente.Programaacademico}</Text>
+                    <Text style={styles.text}>Correo electronico: {asistente.correo}</Text>
+                  </View>
+                ))}
             </View>
             <View style={styles.section}>
                 <Text style={styles.text}>Gracias por su participación.</Text>
@@ -115,12 +124,22 @@ function Forms() {
         </Document>
     )
     
-    const handleChange = (e) => {
-        const {name, value} = e.target;
+    const handleChange = (e, index = null, index_asis = null) => {
+      const {name, value} = e.target;
+      if(index !== null){
+        const newPonentes = [...form.ponentes];
+        newPonentes[index][name] = value;
+        SetForm({...form, ponentes: newPonentes})
+      }else if(index_asis !== null){
+        const newAsistente = [...form.asistente];
+        newAsistente[index_asis][name] = value;
+        SetForm({...form, asistente: newAsistente})
+      }else{
         SetForm({
-            ...form,
-            [name]: value
+          ...form,
+          [name]: value
         });
+      }
     }
     
     const handlenext = (e) => {
@@ -183,7 +202,7 @@ function Forms() {
 
         try {
             // Obtener el nombre del usuario (supongamos que está en el estado `form.nombreActividad`)
-            const nombreUsuario = form.nombreActividad + form.codigoActividad + form.nombreapellido; // Reemplaza esto con tu lógica para obtener el nombre del usuario
+            const nombreUsuario = form.nombreActividad + form.codigoActividad; // Reemplaza esto con tu lógica para obtener el nombre del usuario
     
             // Crear una referencia a la carpeta del usuario
             const userFolderRef = ref(storage, nombreUsuario);
@@ -194,13 +213,13 @@ function Forms() {
             // Subir el PDF a la carpeta del usuario
             const snapshot = await uploadBytes(pdfRef, blob);
             console.log('PDF subido correctamente a Firebase Storage.', snapshot);
-    
+
             // Obtener la URL del archivo subido
             const downloadURL = await getDownloadURL(pdfRef);
             
-            
             // Subir el archivo adicional si existe
-            if (form.asistemciapdf) {
+            if (pdfupload !== false) {
+                console.log(2)
                 const additionalFileRef = ref(userFolderRef, form.asistemciapdf.name);
                 const additionalSnapshot = await uploadBytes(additionalFileRef, form.asistemciapdf);
                 console.log('Archivo adicional subido correctamente a Firebase Storage.', additionalSnapshot);
@@ -230,20 +249,42 @@ function Forms() {
                     nesesidades: text_nesesidades,
                     espacio: text_espaciofisico,
                     apoyoComunicacion : text_apoyocomunicacion,
-                    ponentes: form.Nombres +" "+ form.PrimerApellido +" "+ form.SegundoApellido,
+                    ponentes: form.ponentes,
                     certificado: downloadURL,
                     asistemciapdf: additionalDownloadURL,
-                });
+              });
+            }else{
+              text_nesesidades = form.nesesidades.join(',');
+              text_espaciofisico = form.espacio.join(',');
+              text_apoyocomunicacion = form.apoyoComunicacion.join(',');
+              await addDoc(collection(db, 'certificados'), {
+                id:form.codigoActividad,
+                nombre: nombreUsuario,
+                fecha: form.fechaDiligenciamiento,
+                nombreacti: form.nombreActividad,
+                codigoActividad: form.codigoActividad,
+                tipoActividad: form.tipoActividad,
+                fechaInicio: form.fechaInicio,
+                fechaFinal: form.fechaFinal,
+                salonPosgrado: form.salonPosgrado,
+                tieneCosto: form.tieneCosto,
+                monto: form.monto,
+                duracionHoras: form.duracionHoras,
+                espacioFisico: form.espacioFisico,
+                nesesidades: text_nesesidades,
+                espacio: text_espaciofisico,
+                apoyoComunicacion : text_apoyocomunicacion,
+                ponentes: form.ponentes,
+                certificado: downloadURL
+              });
             }
-
             console.log('Información del certificado guardada en Firestore.');
-    
             // Aquí puedes realizar otras acciones después de cargar el PDF, como actualizar el estado del formulario
             SetStep(1);
         } catch (error) {
             console.error('Error al subir el PDF a Firebase Storage:', error);
         }
-    
+
         console.log('form Data:', form);
         //restablece el formulario
         resetform();
@@ -255,6 +296,7 @@ function Forms() {
             ...form,
             asistemciapdf: file
         })
+        SetPdfupload(true)
     }
 
     const handlecheckbox = (e) => {
@@ -263,6 +305,30 @@ function Forms() {
         ...form,
         [name]: checked ? [...form[name], value] : form[name].filter((option) => option !== value)
       })
+    }
+
+    const handleAddPonente = () => {
+      SetForm({
+        ...form,
+        ponentes: [...form.ponentes, { ponente: '', documento: '', numDocumento: '', Nombres: '', PrimerApellido: '', SegundoApellido: '', Niveldeformacion: '', Vinculacion: '' }]
+      })
+    }
+
+    const handleRemovePonente = index => {
+      const newPonente = form.ponentes.filter((_, i) => i !== index);
+      SetForm({...form, ponentes: newPonente})
+    }
+
+    const handleAddAsistente = () => {
+      SetForm({
+        ...form,
+        asistente: [...form.asistente, {nombreapellido: '',numDocumentoidentificacion: '',Estamento: '',Programaacademico: '',email: ''}]
+      })
+    }
+
+    const handleRemoveAsistente = index_asis => {
+      const newAsistente = form.asistente.filter((_,i) => i !== index_asis);
+      SetForm({...form, asistente: newAsistente})
     }
 
     const options = [
@@ -523,97 +589,90 @@ function Forms() {
         )}
         {step === 3 && (
           <>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Ponentes del evento</label>
-              <input
-                type="text"
-                name="ponentes"
-                value={form.ponentes}
-                onChange={handleChange}
-                placeholder="Descripción (Opcional)"
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Tipo de documento<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="documento"
-                value={form.documento}
-                onChange={handleChange}
-                placeholder="C.C, C.E, Pasaporte, T.I"
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Numero de documento<span className="text-red-500">*</span></label>
-              <input
-                type="number"
-                name="numDocumento"
-                value={form.numDocumento}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Nombres<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="Nombres"
-                value={form.Nombres}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Primer Apellido<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="PrimerApellido"
-                value={form.PrimerApellido}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Segundo Apellido<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="SegundoApellido"
-                value={form.SegundoApellido}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Nivel de formacion<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="Niveldeformacion"
-                value={form.Niveldeformacion}
-                onChange={handleChange}
-                placeholder="Profesional, Especialista, Magister, Doctorado, Posdoctorado"
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Tipo de vinculacion<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="Vinculacion"
-                value={form.Vinculacion}
-                onChange={handleChange}
-                placeholder="Profesor de planta, Profesor ocacionales, Profesor de catedra, Externo internacional, Externo nacional"
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
+          <label className="block mb-2 font-medium text-gray-700">Ponentes del evento</label>
+            {form.ponentes.map((ponente, index) => (
+              <div key={index} className="mb-4">
+                <label className="block mb-2 font-medium text-gray-700">Descripcion de los ponentes</label>
+                <input
+                  type="text"
+                  name="ponente"
+                  value={ponente.ponente}
+                  onChange={e => handleChange(e, index)}
+                  placeholder="Descripción (Opcional)"
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                />
+                <label className="block mb-2 font-medium text-gray-700">Tipo de documento<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="documento"
+                  value={ponente.documento}
+                  onChange={e => handleChange(e, index)}
+                  placeholder="C.C, C.E, Pasaporte, T.I"
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                />
+                <label className="block mb-2 font-medium text-gray-700">Numero de documento<span className="text-red-500">*</span></label>
+                <input
+                  type="number"
+                  name="numDocumento"
+                  value={ponente.numDocumento}
+                  onChange={e => handleChange(e, index)}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                />
+                <label className="block mb-2 font-medium text-gray-700">Nombres<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="Nombres"
+                  value={ponente.Nombres}
+                  onChange={e => handleChange(e, index)}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                />
+                <label className="block mb-2 font-medium text-gray-700">Primer Apellido<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="PrimerApellido"
+                  value={ponente.PrimerApellido}
+                  onChange={e => handleChange(e, index)}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                />
+                <label className="block mb-2 font-medium text-gray-700">Segundo Apellido<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="SegundoApellido"
+                  value={ponente.SegundoApellido}
+                  onChange={e => handleChange(e, index)}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                />
+                <label className="block mb-2 font-medium text-gray-700">Nivel de formacion<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="Niveldeformacion"
+                  value={ponente.Niveldeformacion}
+                  onChange={e => handleChange(e, index)}
+                  placeholder="Profesional, Especialista, Magister, Doctorado, Posdoctorado"
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                />
+                <label className="block mb-2 font-medium text-gray-700">Tipo de vinculacion<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="Vinculacion"
+                  value={ponente.Vinculacion}
+                  onChange={e => handleChange(e, index)}
+                  placeholder="Profesor de planta, Profesor ocacionales, Profesor de catedra, Externo internacional, Externo nacional"
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                />
+                {form.ponentes.length > 1 && (
+                  <button type="button" onClick={() => handleRemovePonente(index)} className="bg-red-500 text-white p-2 rounded-lg mb-2">Eliminar Ponente</button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={handleAddPonente} className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 mb-4">Añadir Ponente</button>
             <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
               Siguiente
             </button>
@@ -631,62 +690,63 @@ function Forms() {
                 className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
               />
             </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Nombres y apellidos<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="nombreapellido"
-                value={form.nombreapellido}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Documento identificación<span className="text-red-500">*</span></label>
-              <input
-                type="number"
-                name="numDocumentoidentificacion"
-                value={form.numDocumentoidentificacion}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Estamento al que pertenece<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="Estamento"
-                value={form.Estamento}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Programa academico al que pertenece<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="Programaacademico"
-                value={form.Programaacademico}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Correo electronico<span className="text-red-500">*</span></label>
-              <input
-                type="email"
-                name="correo"
-                value={form.correo}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            
+          { !pdfupload && (
+            <>
+              {form.asistente.map((asistente, index_asis) => (
+                <div key={index_asis} className="mb-4">
+                  <label className="block mb-2 font-medium text-gray-700">Nombres y apellidos<span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    name="nombreapellido"
+                    value={asistente.nombreapellido}
+                    onChange={e => handleChange(e,null,index_asis)}
+                    required
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                  />
+                  <label className="block mb-2 font-medium text-gray-700">Documento identificación<span className="text-red-500">*</span></label>
+                  <input
+                    type="number"
+                    name="numDocumentoidentificacion"
+                    value={asistente.numDocumentoidentificacion}
+                    onChange={e => handleChange(e,null,index_asis)}
+                    required
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                  />
+                  <label className="block mb-2 font-medium text-gray-700">Estamento al que pertenece<span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    name="Estamento"
+                    value={asistente.Estamento}
+                    onChange={e => handleChange(e,null,index_asis)}
+                    required
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                  />
+                  <label className="block mb-2 font-medium text-gray-700">Programa academico al que pertenece<span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    name="Programaacademico"
+                    value={asistente.Programaacademico}
+                    onChange={e => handleChange(e,null,index_asis)}
+                    required
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                  />
+                  <label className="block mb-2 font-medium text-gray-700">Correo electronico<span className="text-red-500">*</span></label>
+                  <input
+                    type="email"
+                    name="correo"
+                    value={asistente.correo}
+                    onChange={e => handleChange(e,null,index_asis)}
+                    required
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                  />
+                  {form.asistente.length > 1 && (
+                    <button type="button" onClick={() => handleRemoveAsistente(index_asis)} className="bg-red-500 text-white p-2 rounded-lg mb-2">Eliminar Asistente</button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={handleAddAsistente} className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 mb-4">Añadir Asistente</button>
+            </>
+          )}
             <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
               Enviar
             </button>
