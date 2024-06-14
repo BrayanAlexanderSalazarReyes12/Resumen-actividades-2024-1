@@ -1,8 +1,10 @@
 import { useState } from "react"
-import { Document, Page, Text, StyleSheet, View, pdf } from '@react-pdf/renderer';
+import QRCode from 'qrcode';
+import { Document, Page, Text, StyleSheet, View, pdf, Image } from '@react-pdf/renderer';
 import { db, storage} from "../../database/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { saveAs } from 'file-saver';
 
 function Forms() {
     const [step, SetStep] = useState(1)
@@ -34,8 +36,6 @@ function Forms() {
         Vinculacion: ''
     })
 
-    const [pdfupload, SetPdfupload] = useState(false)
-
     const styles = StyleSheet.create({
         page: {
           flexDirection: 'column',
@@ -61,7 +61,29 @@ function Forms() {
           color: '#555555',
         },
     });
+
+    // Estilos para el documento PDF
+    const styles_pdf_qr = StyleSheet.create({
+      page: {
+        flexDirection: 'column',
+        padding: 20,
+      },
+      section: {
+        margin: 10,
+        padding: 10,
+        flexGrow: 1,
+      },
+      qrCodeContainer: {
+        alignSelf: 'center',
+        marginBottom: 10,
+      },
+      qrCode: {
+        margin: 'auto',
+      },
+    });
     
+    const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+
     const fechaActual = new Date().toLocaleDateString();
 
     const Certificate = () => (
@@ -200,6 +222,32 @@ function Forms() {
         let text_nesesidades
         let text_apoyocomunicacion
 
+        //qr
+        const url_form = `https://resumendeactividades2024-1.netlify.app/Registro_asistencia/${form.nombreActividad}/${form.codigoActividad}`;
+        // Generar el QR code como Data URL
+        const qrCodeDataUrl = await QRCode.toDataURL(url_form);
+        setQrCodeDataUrl(qrCodeDataUrl);
+
+        const MyDocument = (
+          <Document>
+            <Page size="A4" style={styles_pdf_qr.page}>
+              <View style={styles_pdf_qr.section}>
+                <Text>Registro de Asistencia</Text>
+                <View style={styles_pdf_qr.qrCodeContainer}>
+                  <Image src={qrCodeDataUrl} style={styles_pdf_qr.qrCode} />
+                </View>
+              </View>
+            </Page>
+          </Document>
+        );
+
+        const asPdf = pdf();
+        asPdf.updateContainer(MyDocument);
+        const asblob = await asPdf.toBlob();
+        saveAs(asblob, 'registro_asistencia.pdf');
+        
+        const fileName_qr = 'registro_asistencia.pdf'
+
         try {
             // Obtener el nombre del usuario (supongamos que está en el estado `form.nombreActividad`)
             const nombreUsuario = form.nombreActividad + form.codigoActividad; // Reemplaza esto con tu lógica para obtener el nombre del usuario
@@ -214,89 +262,51 @@ function Forms() {
             const snapshot = await uploadBytes(pdfRef, blob);
             console.log('PDF subido correctamente a Firebase Storage.', snapshot);
 
+            // Crear una referencia para el archivo PDF
+            const pdfRef_qr = ref(userFolderRef, fileName_qr);
+  
+            // Subir el PDF a la carpeta del usuario
+            const snapshot_qr = await uploadBytes(pdfRef_qr, asblob);
+            console.log('PDF subido correctamente a Firebase Storage.', snapshot_qr);
+
             // Obtener la URL del archivo subido
             const downloadURL = await getDownloadURL(pdfRef);
+            const downloadURLqr = await getDownloadURL(pdfRef_qr);
             
-            // Subir el archivo adicional si existe
-            if (pdfupload !== false) {
-                console.log(2)
-                const additionalFileRef = ref(userFolderRef, form.asistemciapdf.name);
-                const additionalSnapshot = await uploadBytes(additionalFileRef, form.asistemciapdf);
-                console.log('Archivo adicional subido correctamente a Firebase Storage.', additionalSnapshot);
-
-                // Obtener la URL del archivo adicional subido
-                const additionalDownloadURL = await getDownloadURL(additionalFileRef);
-
-                //descompone el array de nesesidades y espacio fisico para guardarlo en firebase
-                text_nesesidades = form.nesesidades.join(',');
-                text_espaciofisico = form.espacio.join(',');
-                text_apoyocomunicacion = form.apoyoComunicacion.join(',');
-                // Crear documento en Firestore para el archivo adicional
-                await addDoc(collection(db, 'certificados'), {
-                    id:form.codigoActividad,
-                    nombre: nombreUsuario,
-                    fecha: form.fechaDiligenciamiento,
-                    nombreacti: form.nombreActividad,
-                    codigoActividad: form.codigoActividad,
-                    tipoActividad: form.tipoActividad,
-                    fechaInicio: form.fechaInicio,
-                    fechaFinal: form.fechaFinal,
-                    salonPosgrado: form.salonPosgrado,
-                    tieneCosto: form.tieneCosto,
-                    monto: form.monto,
-                    duracionHoras: form.duracionHoras,
-                    espacioFisico: form.espacioFisico,
-                    nesesidades: text_nesesidades,
-                    espacio: text_espaciofisico,
-                    apoyoComunicacion : text_apoyocomunicacion,
-                    ponentes: form.ponentes,
-                    certificado: downloadURL,
-                    asistemciapdf: additionalDownloadURL,
-              });
-            }else{
-              text_nesesidades = form.nesesidades.join(',');
-              text_espaciofisico = form.espacio.join(',');
-              text_apoyocomunicacion = form.apoyoComunicacion.join(',');
-              await addDoc(collection(db, 'certificados'), {
-                id:form.codigoActividad,
-                nombre: nombreUsuario,
-                fecha: form.fechaDiligenciamiento,
-                nombreacti: form.nombreActividad,
-                codigoActividad: form.codigoActividad,
-                tipoActividad: form.tipoActividad,
-                fechaInicio: form.fechaInicio,
-                fechaFinal: form.fechaFinal,
-                salonPosgrado: form.salonPosgrado,
-                tieneCosto: form.tieneCosto,
-                monto: form.monto,
-                duracionHoras: form.duracionHoras,
-                espacioFisico: form.espacioFisico,
-                nesesidades: text_nesesidades,
-                espacio: text_espaciofisico,
-                apoyoComunicacion : text_apoyocomunicacion,
-                ponentes: form.ponentes,
-                certificado: downloadURL
-              });
-            }
+            text_nesesidades = form.nesesidades.join(',');
+            text_espaciofisico = form.espacio.join(',');
+            text_apoyocomunicacion = form.apoyoComunicacion.join(',');
+            await addDoc(collection(db, 'certificados'), {
+              id:form.codigoActividad,
+              nombre: nombreUsuario,
+              fecha: form.fechaDiligenciamiento,
+              nombreacti: form.nombreActividad,
+              codigoActividad: form.codigoActividad,
+              tipoActividad: form.tipoActividad,
+              fechaInicio: form.fechaInicio,
+              fechaFinal: form.fechaFinal,
+              salonPosgrado: form.salonPosgrado,
+              tieneCosto: form.tieneCosto,
+              monto: form.monto,
+              duracionHoras: form.duracionHoras,
+              espacioFisico: form.espacioFisico,
+              nesesidades: text_nesesidades,
+              espacio: text_espaciofisico,
+              apoyoComunicacion : text_apoyocomunicacion,
+              ponentes: form.ponentes,
+              certificado: downloadURL,
+              qr: downloadURLqr
+            });
             console.log('Información del certificado guardada en Firestore.');
             // Aquí puedes realizar otras acciones después de cargar el PDF, como actualizar el estado del formulario
             SetStep(1);
         } catch (error) {
             console.error('Error al subir el PDF a Firebase Storage:', error);
         }
-
+        
         console.log('form Data:', form);
         //restablece el formulario
-        resetform();
-    }
-
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        SetForm({
-            ...form,
-            asistemciapdf: file
-        })
-        SetPdfupload(true)
+        //resetform();
     }
 
     const handlecheckbox = (e) => {
@@ -319,17 +329,7 @@ function Forms() {
       SetForm({...form, ponentes: newPonente})
     }
 
-    const handleAddAsistente = () => {
-      SetForm({
-        ...form,
-        asistente: [...form.asistente, {nombreapellido: '',numDocumentoidentificacion: '',Estamento: '',Programaacademico: '',email: ''}]
-      })
-    }
 
-    const handleRemoveAsistente = index_asis => {
-      const newAsistente = form.asistente.filter((_,i) => i !== index_asis);
-      SetForm({...form, asistente: newAsistente})
-    }
 
     const options = [
       { id: 1, label: 'Bombos' },
@@ -360,7 +360,7 @@ function Forms() {
   return (
     <section className="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-lg shadow-lg mt-10 mb-10">
       <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Resumen actividades 2024-1</h1>
-      <form onSubmit={step == 4 ? handleSubmit : handlenext} className="space-y-6">
+      <form onSubmit={step == 3 ? handleSubmit : handlenext} className="space-y-6">
         {step === 1 && (
           <>
             <div>
@@ -589,167 +589,93 @@ function Forms() {
         )}
         {step === 3 && (
           <>
-          <label className="block mb-2 font-medium text-gray-700">Ponentes del evento</label>
-            {form.ponentes.map((ponente, index) => (
-              <div key={index} className="mb-4">
-                <label className="block mb-2 font-medium text-gray-700">Descripcion de los ponentes</label>
-                <input
-                  type="text"
-                  name="ponente"
-                  value={ponente.ponente}
-                  onChange={e => handleChange(e, index)}
-                  placeholder="Descripción (Opcional)"
-                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                />
-                <label className="block mb-2 font-medium text-gray-700">Tipo de documento<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="documento"
-                  value={ponente.documento}
-                  onChange={e => handleChange(e, index)}
-                  placeholder="C.C, C.E, Pasaporte, T.I"
-                  required
-                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                />
-                <label className="block mb-2 font-medium text-gray-700">Numero de documento<span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  name="numDocumento"
-                  value={ponente.numDocumento}
-                  onChange={e => handleChange(e, index)}
-                  required
-                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                />
-                <label className="block mb-2 font-medium text-gray-700">Nombres<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="Nombres"
-                  value={ponente.Nombres}
-                  onChange={e => handleChange(e, index)}
-                  required
-                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                />
-                <label className="block mb-2 font-medium text-gray-700">Primer Apellido<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="PrimerApellido"
-                  value={ponente.PrimerApellido}
-                  onChange={e => handleChange(e, index)}
-                  required
-                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                />
-                <label className="block mb-2 font-medium text-gray-700">Segundo Apellido<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="SegundoApellido"
-                  value={ponente.SegundoApellido}
-                  onChange={e => handleChange(e, index)}
-                  required
-                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                />
-                <label className="block mb-2 font-medium text-gray-700">Nivel de formacion<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="Niveldeformacion"
-                  value={ponente.Niveldeformacion}
-                  onChange={e => handleChange(e, index)}
-                  placeholder="Profesional, Especialista, Magister, Doctorado, Posdoctorado"
-                  required
-                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                />
-                <label className="block mb-2 font-medium text-gray-700">Tipo de vinculacion<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="Vinculacion"
-                  value={ponente.Vinculacion}
-                  onChange={e => handleChange(e, index)}
-                  placeholder="Profesor de planta, Profesor ocacionales, Profesor de catedra, Externo internacional, Externo nacional"
-                  required
-                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                />
-                {form.ponentes.length > 1 && (
-                  <button type="button" onClick={() => handleRemovePonente(index)} className="bg-red-500 text-white p-2 rounded-lg mb-2">Eliminar Ponente</button>
-                )}
-              </div>
-            ))}
-            <button type="button" onClick={handleAddPonente} className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 mb-4">Añadir Ponente</button>
-            <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
-              Siguiente
-            </button>
-          </>
-        )}
-        {step === 4 && (
-          <>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Anexe aqui el PDF asistencia</label>
-              <input
-                type="file"
-                accept=".pdf"
-                name="asistemciapdf"
-                onChange={handleFileChange}
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-          { !pdfupload && (
-            <>
-              {form.asistente.map((asistente, index_asis) => (
-                <div key={index_asis} className="mb-4">
-                  <label className="block mb-2 font-medium text-gray-700">Nombres y apellidos<span className="text-red-500">*</span></label>
+            <label className="block mb-2 font-medium text-gray-700">Ponentes del evento</label>
+              {form.ponentes.map((ponente, index) => (
+                <div key={index} className="mb-4">
+                  <label className="block mb-2 font-medium text-gray-700">Descripcion de los ponentes</label>
                   <input
                     type="text"
-                    name="nombreapellido"
-                    value={asistente.nombreapellido}
-                    onChange={e => handleChange(e,null,index_asis)}
-                    required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                    name="ponente"
+                    value={ponente.ponente}
+                    onChange={e => handleChange(e, index)}
+                    placeholder="Descripción (Opcional)"
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
                   />
-                  <label className="block mb-2 font-medium text-gray-700">Documento identificación<span className="text-red-500">*</span></label>
+                  <label className="block mb-2 font-medium text-gray-700">Tipo de documento<span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    name="documento"
+                    value={ponente.documento}
+                    onChange={e => handleChange(e, index)}
+                    placeholder="C.C, C.E, Pasaporte, T.I"
+                    required
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                  />
+                  <label className="block mb-2 font-medium text-gray-700">Numero de documento<span className="text-red-500">*</span></label>
                   <input
                     type="number"
-                    name="numDocumentoidentificacion"
-                    value={asistente.numDocumentoidentificacion}
-                    onChange={e => handleChange(e,null,index_asis)}
+                    name="numDocumento"
+                    value={ponente.numDocumento}
+                    onChange={e => handleChange(e, index)}
                     required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
                   />
-                  <label className="block mb-2 font-medium text-gray-700">Estamento al que pertenece<span className="text-red-500">*</span></label>
+                  <label className="block mb-2 font-medium text-gray-700">Nombres<span className="text-red-500">*</span></label>
                   <input
                     type="text"
-                    name="Estamento"
-                    value={asistente.Estamento}
-                    onChange={e => handleChange(e,null,index_asis)}
+                    name="Nombres"
+                    value={ponente.Nombres}
+                    onChange={e => handleChange(e, index)}
                     required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
                   />
-                  <label className="block mb-2 font-medium text-gray-700">Programa academico al que pertenece<span className="text-red-500">*</span></label>
+                  <label className="block mb-2 font-medium text-gray-700">Primer Apellido<span className="text-red-500">*</span></label>
                   <input
                     type="text"
-                    name="Programaacademico"
-                    value={asistente.Programaacademico}
-                    onChange={e => handleChange(e,null,index_asis)}
+                    name="PrimerApellido"
+                    value={ponente.PrimerApellido}
+                    onChange={e => handleChange(e, index)}
                     required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
                   />
-                  <label className="block mb-2 font-medium text-gray-700">Correo electronico<span className="text-red-500">*</span></label>
+                  <label className="block mb-2 font-medium text-gray-700">Segundo Apellido<span className="text-red-500">*</span></label>
                   <input
-                    type="email"
-                    name="correo"
-                    value={asistente.correo}
-                    onChange={e => handleChange(e,null,index_asis)}
+                    type="text"
+                    name="SegundoApellido"
+                    value={ponente.SegundoApellido}
+                    onChange={e => handleChange(e, index)}
                     required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
                   />
-                  {form.asistente.length > 1 && (
-                    <button type="button" onClick={() => handleRemoveAsistente(index_asis)} className="bg-red-500 text-white p-2 rounded-lg mb-2">Eliminar Asistente</button>
+                  <label className="block mb-2 font-medium text-gray-700">Nivel de formacion<span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    name="Niveldeformacion"
+                    value={ponente.Niveldeformacion}
+                    onChange={e => handleChange(e, index)}
+                    placeholder="Profesional, Especialista, Magister, Doctorado, Posdoctorado"
+                    required
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                  />
+                  <label className="block mb-2 font-medium text-gray-700">Tipo de vinculacion<span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    name="Vinculacion"
+                    value={ponente.Vinculacion}
+                    onChange={e => handleChange(e, index)}
+                    placeholder="Profesor de planta, Profesor ocacionales, Profesor de catedra, Externo internacional, Externo nacional"
+                    required
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                  />
+                  {form.ponentes.length > 1 && (
+                    <button type="button" onClick={() => handleRemovePonente(index)} className="bg-red-500 text-white p-2 rounded-lg mb-2">Eliminar Ponente</button>
                   )}
                 </div>
               ))}
-              <button type="button" onClick={handleAddAsistente} className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 mb-4">Añadir Asistente</button>
-            </>
-          )}
-            <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
-              Enviar
-            </button>
+              <button type="button" onClick={handleAddPonente} className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 mb-4">Añadir Ponente</button>
+              <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
+                Enviar
+              </button>
           </>
         )}
       </form>
