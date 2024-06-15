@@ -18,14 +18,14 @@ exports.handler = async (event, context) => {
             port: 465,
             secure: true, // usa SSL
             auth: {
-                user: "bsalazarreyes88@gmail.com", // dirección de Gmail
-                pass: "jkgo qxst dqen zsox" // contraseña de aplicación generada en Google
+                user: "registrodeeventos89@gmail.com", // dirección de Gmail
+                pass: "zbvq bdnq lxrn tdpk" // contraseña de aplicación generada en Google
             }
         });
 
         // Opciones del correo electrónico
         let mailOptions = {
-            from: `"Registro de asistencia de los eventos" <bsalazarr@unicartagena.edu.co>`,
+            from: `"Registro de asistencia de los eventos" <registrodeeventos89@gmail.com>`,
             to: params.correo,
             subject: `Certificado de asistencia ${params.nombredelevento}`,
             text: `Gracias por su participación en el evento. Adjunto encontrará el certificado de asistencia al evento ${params.nombredelevento}.`,
