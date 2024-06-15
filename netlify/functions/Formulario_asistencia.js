@@ -3,7 +3,11 @@ exports.handler = async (event, context) => {
         case "POST":
             const params = JSON.parse(event.body);
             console.log("RECIBI UNA SOLICITUD", params);
-            return;
+
+            return{
+                statusCode: 200,
+                message: "Email enviado con exito"
+            };
         default:
             return{
                 statusCode: 405,
