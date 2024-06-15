@@ -103,7 +103,7 @@ function Registro_asistencia() {
                     body: JSON.stringify({ 
                         pdf: pdfBase64,
                         correo: asistente.correo,
-                        nombredelevento: asistente.nombredelevento
+                        nombredelevento: seleccionado
                     })
                 });
 
