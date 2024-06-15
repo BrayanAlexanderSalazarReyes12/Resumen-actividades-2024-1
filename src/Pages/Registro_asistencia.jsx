@@ -95,7 +95,7 @@ function Registro_asistencia() {
                 saveAs(asBlob, 'registro_asistencia.pdf');
 
                 // Send PDF in a POST request
-                const res = await fetch(".netlify/functions/Formulario_asistencia", {
+                const res = await fetch("https://resumendeactividades2024-1.netlify.app/.netlify/functions/Formulario_asistencia", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
