@@ -14,6 +14,9 @@ exports.handler = async (event, context) => {
 
         // Validar que los parámetros necesarios están presentes y son válidos
         if (!params.correo || !params.nombredelevento || !params.pdfBase64) {
+            console.log(params.correo)
+            console.log(params.nombredelevento)
+            console.log(params.pdfBase64)
             return {
                 statusCode: 400,
                 body: JSON.stringify({ message: "Faltan parámetros requeridos o son inválidos" })
