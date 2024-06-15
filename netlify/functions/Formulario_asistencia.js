@@ -12,36 +12,28 @@ exports.handler = async (event, context) => {
         const params = JSON.parse(event.body);
         console.log("RECIBI UNA SOLICITUD", params);
 
-        // Validar que los parámetros necesarios están presentes y son válidos
-        if (!params.correo || !params.nombredelevento) {
-            console.log(params.correo)
-            console.log(params.nombredelevento)
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ message: "Faltan parámetros requeridos o son inválidos" })
-            };
-        }
-
         // Configurar el transporte de Nodemailer para Gmail
         let transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // usa SSL
             auth: {
-                user: "bsalazarr@unicartagena.edu.co", // dirección de Gmail desde variables de entorno
-                pass: "1234567890" // contraseña de Gmail o contraseña específica de la aplicación desde variables de entorno
+                user: "bsalazarr@unicartagena.edu.co", // dirección de Gmail
+                pass: "1234567890" // contraseña de aplicación generada en Google
             }
         });
 
         // Opciones del correo electrónico
         let mailOptions = {
-            from: `"Sender Name" <bsalazarr@unicartagena.edu.co>`, // dirección del remitente
-            to: params.correo, // lista de destinatarios
-            subject: `Certificado de asistencia ${params.nombredelevento}`, // asunto
-            text: `Gracias por su participación en el evento. Adjunto encontrará el certificado de asistencia al evento ${params.nombredelevento}.`, // cuerpo del mensaje en texto plano
+            from: `"Sender Name" <bsalazarr@unicartagena.edu.co>`,
+            to: params.correo,
+            subject: `Certificado de asistencia ${params.nombredelevento}`,
+            text: `Gracias por su participación en el evento. Adjunto encontrará el certificado de asistencia al evento ${params.nombredelevento}.`,
             attachments: [
                 {
-                    filename: 'asistencia.pdf', // nombre del archivo adjunto
-                    content: params.pdfBase64, // contenido del archivo en base64
-                    encoding: 'base64' // codificación del archivo
+                    filename: 'asistencia.pdf',
+                    content: params.pdfBase64,
+                    encoding: 'base64'
                 }
             ]
         };
