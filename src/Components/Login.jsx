@@ -18,6 +18,7 @@ export const Login = () => {
       {login ? (
         <ListResumenActividades 
           SetLogin = {SetLogin}
+          login = {login}
         />
       ):(
         <section className="bg-gray-50 dark:bg-gray-900">

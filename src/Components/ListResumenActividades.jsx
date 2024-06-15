@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { db } from '../database/firebase.js'; // Ajusta la ruta según la ubicación de tu archivo firebase.js
 import { collection, onSnapshot } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
-const ListResumenActividades = ({ SetLogin }) => {
+
+const ListResumenActividades = ({ SetLogin, login }) => {
   const [certificados, setCertificados] = useState([]);
   const [filteredCertificados, setFilteredCertificados] = useState([]);
   const [searchParams, setSearchParams] = useState({
@@ -35,10 +37,18 @@ const ListResumenActividades = ({ SetLogin }) => {
       //await signOut(auth);
       // Redireccionar a la página de inicio de sesión u otra página deseada
       SetLogin(false)
+      localStorage.setItem("Login",false);
     } catch (error) {
       console.error('Error cerrando sesión:', error);
     }
   };
+
+  const navigate = useNavigate();
+
+  const handleRegistrarEvento = () => {
+    localStorage.setItem("Login",login);
+    navigate('/');
+  }
 
   const handleDownload = (url) => {
     // Lógica para descargar el archivo con la URL proporcionada
@@ -90,6 +100,12 @@ const ListResumenActividades = ({ SetLogin }) => {
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
           Cerrar sesión
+        </button>
+        <button
+          onClick={handleRegistrarEvento}
+          className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Registrar nuevo evento
         </button>
       </div>
       <div className="overflow-x-auto mb-4">

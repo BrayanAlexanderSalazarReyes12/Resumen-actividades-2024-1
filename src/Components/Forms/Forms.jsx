@@ -5,6 +5,8 @@ import { db, storage} from "../../database/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { saveAs } from 'file-saver';
+import { useLocation, useNavigate } from "react-router-dom";
+
 
 function Forms() {
     const [step, SetStep] = useState(1)
@@ -330,7 +332,6 @@ function Forms() {
     }
 
 
-
     const options = [
       { id: 1, label: 'Bombos' },
       { id: 2, label: 'Mesas' },
@@ -357,329 +358,363 @@ function Forms() {
       { id: 6, label: 'Otra...'}
     ];
 
+    const navigate = useNavigate()
+    const handlelogin = () => {
+      navigate('/login')
+    }
+
+    const handleLogout = () => {
+      localStorage.setItem('Login',false);
+      navigate('/login')
+    }
+
+    let login = localStorage.getItem('Login')
+    
   return (
-    <section className="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-lg shadow-lg mt-10 mb-10">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Resumen actividades 2024-1</h1>
-      <form onSubmit={step == 3 ? handleSubmit : handlenext} className="space-y-6">
-        {step === 1 && (
-          <>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Fecha de diligenciamiento<span className="text-red-500">*</span></label>
-              <input
-                type="date"
-                name="fechaDiligenciamiento"
-                value={form.fechaDiligenciamiento}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Periodo académico<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="periodoAcademico"
-                value={form.periodoAcademico}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Nombre de la actividad académica<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="nombreActividad"
-                value={form.nombreActividad}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Código de la actividad académica<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="codigoActividad"
-                value={form.codigoActividad}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Tipo de actividad<span className="text-red-500">*</span></label>
-              <select 
-                value={form.tipoActividad} 
-                onChange={handleChange} 
-                name="tipoActividad"
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              >
-                <option value="">Seleccionar...</option>
-                <option value="diplomados">Diplomados</option>
-                <option value="cursos-cortos">Cursos cortos</option>
-                <option value="coloquios">Coloquios</option>
-                <option value="conversatorios">Conversatorios</option>
-                <option value="talleres">Talleres</option>
-                <option value="seminarios">Seminarios</option>
-                <option value="congreso">Congreso</option>
-                <option value="estequloshop">Estequloshop</option>
-                <option value="feria-de-emprendimiento">Feria de Emprendimiento</option>
-                <option value="exposicion-de-afiches">Exposición de afiches</option>
-                <option value="maratones">Maratones</option>
-                <option value="concurso-de-puente">Concurso de puente</option>
-                <option value="otra">Otra...</option>
-              </select>
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Fecha de inicio<span className="text-red-500">*</span></label>
-              <input
-                type="date"
-                name="fechaInicio"
-                value={form.fechaInicio}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Fecha final<span className="text-red-500">*</span></label>
-              <input
-                type="date"
-                name="fechaFinal"
-                value={form.fechaFinal}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Unidad académica responsable<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="unidadResponsable"
-                value={form.unidadResponsable}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">¿Cuál salón de posgrado o bloque?<span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="salonPosgrado"
-                value={form.salonPosgrado}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">¿Tiene algún costo la actividad?<span className="text-red-500">*</span></label>
-              <select
-                name="tieneCosto"
-                value={form.tieneCosto}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              >
-                <option value="no">No</option>
-                <option value="si">Sí</option>
-              </select>
-            </div>
-            {form.tieneCosto === 'si' && (
+    <>
+    {login == 'true' ? (
+      <section className="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-lg shadow-lg mt-10 mb-10">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Resumen actividades 2024-1</h1>
+        <form onSubmit={step == 3 ? handleSubmit : handlenext} className="space-y-6">
+          {step === 1 && (
+            <>
               <div>
-                <label className="block mb-2 font-medium text-gray-700">Indicar el monto</label>
+                <label className="block mb-2 font-medium text-gray-700">Fecha de diligenciamiento<span className="text-red-500">*</span></label>
+                <input
+                  type="date"
+                  name="fechaDiligenciamiento"
+                  value={form.fechaDiligenciamiento}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Periodo académico<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="periodoAcademico"
+                  value={form.periodoAcademico}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Nombre de la actividad académica<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="nombreActividad"
+                  value={form.nombreActividad}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Código de la actividad académica<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="codigoActividad"
+                  value={form.codigoActividad}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Tipo de actividad<span className="text-red-500">*</span></label>
+                <select 
+                  value={form.tipoActividad} 
+                  onChange={handleChange} 
+                  name="tipoActividad"
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                >
+                  <option value="">Seleccionar...</option>
+                  <option value="diplomados">Diplomados</option>
+                  <option value="cursos-cortos">Cursos cortos</option>
+                  <option value="coloquios">Coloquios</option>
+                  <option value="conversatorios">Conversatorios</option>
+                  <option value="talleres">Talleres</option>
+                  <option value="seminarios">Seminarios</option>
+                  <option value="congreso">Congreso</option>
+                  <option value="estequloshop">Estequloshop</option>
+                  <option value="feria-de-emprendimiento">Feria de Emprendimiento</option>
+                  <option value="exposicion-de-afiches">Exposición de afiches</option>
+                  <option value="maratones">Maratones</option>
+                  <option value="concurso-de-puente">Concurso de puente</option>
+                  <option value="otra">Otra...</option>
+                </select>
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Fecha de inicio<span className="text-red-500">*</span></label>
+                <input
+                  type="date"
+                  name="fechaInicio"
+                  value={form.fechaInicio}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Fecha final<span className="text-red-500">*</span></label>
+                <input
+                  type="date"
+                  name="fechaFinal"
+                  value={form.fechaFinal}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Unidad académica responsable<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="unidadResponsable"
+                  value={form.unidadResponsable}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">¿Cuál salón de posgrado o bloque?<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="salonPosgrado"
+                  value={form.salonPosgrado}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">¿Tiene algún costo la actividad?<span className="text-red-500">*</span></label>
+                <select
+                  name="tieneCosto"
+                  value={form.tieneCosto}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                >
+                  <option value="no">No</option>
+                  <option value="si">Sí</option>
+                </select>
+              </div>
+              {form.tieneCosto === 'si' && (
+                <div>
+                  <label className="block mb-2 font-medium text-gray-700">Indicar el monto</label>
+                  <input
+                    type="number"
+                    name="monto"
+                    value={form.monto}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Duración en horas<span className="text-red-500">*</span></label>
                 <input
                   type="number"
-                  name="monto"
-                  value={form.monto}
+                  name="duracionHoras"
+                  value={form.duracionHoras}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                />
+              </div>
+              <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
+                Siguiente
+              </button>
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Requerimiento de necesidades</label>
+                <input
+                  type="text"
+                  name="espacioFisico"
+                  value={form.espacioFisico}
                   onChange={handleChange}
                   className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
                 />
               </div>
-            )}
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Duración en horas<span className="text-red-500">*</span></label>
-              <input
-                type="number"
-                name="duracionHoras"
-                value={form.duracionHoras}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
-              Siguiente
-            </button>
-          </>
-        )}
-        {step === 2 && (
-          <>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Requerimiento de necesidades</label>
-              <input
-                type="text"
-                name="espacioFisico"
-                value={form.espacioFisico}
-                onChange={handleChange}
-                className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Para el evento necesita<span className="text-red-500">*</span></label>
-              {options.map((option) => (
-                <div key={option.id} className="flex items-center mb-2">
-                  <input
-                    type="checkbox"
-                    name="nesesidades"
-                    id={`option-${option.id}`}
-                    value={option.label}
-                    onChange={handlecheckbox}
-                    className="mr-2"
-                  />
-                  <label htmlFor={`option-${option.id}`} className="text-gray-700">
-                    {option.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Espacio fisico<span className="text-red-500">*</span></label>
-              {options_espaciofisico.map((option) => (
-                <div key={option.id} className="flex items-center mb-2">
-                  <input
-                    type="checkbox"
-                    name="espacio"
-                    id={`option-${option.id}`}
-                    value={option.label}
-                    onChange={handlecheckbox}
-                    className="mr-2"
-                  />
-                  <label htmlFor={`option-${option.id}`} className="text-gray-700">
-                    {option.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Requerimiento de apoyo en comunicación<span className="text-red-500">*</span></label>
-              {options_apoyocomunicacion.map((option) => (
-                <div key={option.id} className="flex items-center mb-2">
-                  <input
-                    type="checkbox"
-                    name="apoyoComunicacion"
-                    id={`option-${option.id}`}
-                    value={option.label}
-                    onChange={handlecheckbox}
-                    className="mr-2"
-                  />
-                  <label htmlFor={`option-${option.id}`} className="text-gray-700">
-                    {option.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-            <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
-              Siguiente
-            </button>
-          </>
-        )}
-        {step === 3 && (
-          <>
-            <label className="block mb-2 font-medium text-gray-700">Ponentes del evento</label>
-              {form.ponentes.map((ponente, index) => (
-                <div key={index} className="mb-4">
-                  <label className="block mb-2 font-medium text-gray-700">Descripcion de los ponentes</label>
-                  <input
-                    type="text"
-                    name="ponente"
-                    value={ponente.ponente}
-                    onChange={e => handleChange(e, index)}
-                    placeholder="Descripción (Opcional)"
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                  />
-                  <label className="block mb-2 font-medium text-gray-700">Tipo de documento<span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="documento"
-                    value={ponente.documento}
-                    onChange={e => handleChange(e, index)}
-                    placeholder="C.C, C.E, Pasaporte, T.I"
-                    required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                  />
-                  <label className="block mb-2 font-medium text-gray-700">Numero de documento<span className="text-red-500">*</span></label>
-                  <input
-                    type="number"
-                    name="numDocumento"
-                    value={ponente.numDocumento}
-                    onChange={e => handleChange(e, index)}
-                    required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                  />
-                  <label className="block mb-2 font-medium text-gray-700">Nombres<span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="Nombres"
-                    value={ponente.Nombres}
-                    onChange={e => handleChange(e, index)}
-                    required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                  />
-                  <label className="block mb-2 font-medium text-gray-700">Primer Apellido<span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="PrimerApellido"
-                    value={ponente.PrimerApellido}
-                    onChange={e => handleChange(e, index)}
-                    required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                  />
-                  <label className="block mb-2 font-medium text-gray-700">Segundo Apellido<span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="SegundoApellido"
-                    value={ponente.SegundoApellido}
-                    onChange={e => handleChange(e, index)}
-                    required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                  />
-                  <label className="block mb-2 font-medium text-gray-700">Nivel de formacion<span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="Niveldeformacion"
-                    value={ponente.Niveldeformacion}
-                    onChange={e => handleChange(e, index)}
-                    placeholder="Profesional, Especialista, Magister, Doctorado, Posdoctorado"
-                    required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                  />
-                  <label className="block mb-2 font-medium text-gray-700">Tipo de vinculacion<span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="Vinculacion"
-                    value={ponente.Vinculacion}
-                    onChange={e => handleChange(e, index)}
-                    placeholder="Profesor de planta, Profesor ocacionales, Profesor de catedra, Externo internacional, Externo nacional"
-                    required
-                    className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
-                  />
-                  {form.ponentes.length > 1 && (
-                    <button type="button" onClick={() => handleRemovePonente(index)} className="bg-red-500 text-white p-2 rounded-lg mb-2">Eliminar Ponente</button>
-                  )}
-                </div>
-              ))}
-              <button type="button" onClick={handleAddPonente} className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 mb-4">Añadir Ponente</button>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Para el evento necesita<span className="text-red-500">*</span></label>
+                {options.map((option) => (
+                  <div key={option.id} className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      name="nesesidades"
+                      id={`option-${option.id}`}
+                      value={option.label}
+                      onChange={handlecheckbox}
+                      className="mr-2"
+                    />
+                    <label htmlFor={`option-${option.id}`} className="text-gray-700">
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Espacio fisico<span className="text-red-500">*</span></label>
+                {options_espaciofisico.map((option) => (
+                  <div key={option.id} className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      name="espacio"
+                      id={`option-${option.id}`}
+                      value={option.label}
+                      onChange={handlecheckbox}
+                      className="mr-2"
+                    />
+                    <label htmlFor={`option-${option.id}`} className="text-gray-700">
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">Requerimiento de apoyo en comunicación<span className="text-red-500">*</span></label>
+                {options_apoyocomunicacion.map((option) => (
+                  <div key={option.id} className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      name="apoyoComunicacion"
+                      id={`option-${option.id}`}
+                      value={option.label}
+                      onChange={handlecheckbox}
+                      className="mr-2"
+                    />
+                    <label htmlFor={`option-${option.id}`} className="text-gray-700">
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
               <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
-                Enviar
+                Siguiente
               </button>
-          </>
-        )}
-      </form>
-    </section>
+            </>
+          )}
+          {step === 3 && (
+            <>
+              <label className="block mb-2 font-medium text-gray-700">Ponentes del evento</label>
+                {form.ponentes.map((ponente, index) => (
+                  <div key={index} className="mb-4">
+                    <label className="block mb-2 font-medium text-gray-700">Descripcion de los ponentes</label>
+                    <input
+                      type="text"
+                      name="ponente"
+                      value={ponente.ponente}
+                      onChange={e => handleChange(e, index)}
+                      placeholder="Descripción (Opcional)"
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Tipo de documento<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="documento"
+                      value={ponente.documento}
+                      onChange={e => handleChange(e, index)}
+                      placeholder="C.C, C.E, Pasaporte, T.I"
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Numero de documento<span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      name="numDocumento"
+                      value={ponente.numDocumento}
+                      onChange={e => handleChange(e, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Nombres<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="Nombres"
+                      value={ponente.Nombres}
+                      onChange={e => handleChange(e, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Primer Apellido<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="PrimerApellido"
+                      value={ponente.PrimerApellido}
+                      onChange={e => handleChange(e, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Segundo Apellido<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="SegundoApellido"
+                      value={ponente.SegundoApellido}
+                      onChange={e => handleChange(e, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Nivel de formacion<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="Niveldeformacion"
+                      value={ponente.Niveldeformacion}
+                      onChange={e => handleChange(e, index)}
+                      placeholder="Profesional, Especialista, Magister, Doctorado, Posdoctorado"
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Tipo de vinculacion<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="Vinculacion"
+                      value={ponente.Vinculacion}
+                      onChange={e => handleChange(e, index)}
+                      placeholder="Profesor de planta, Profesor ocacionales, Profesor de catedra, Externo internacional, Externo nacional"
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    {form.ponentes.length > 1 && (
+                      <button type="button" onClick={() => handleRemovePonente(index)} className="bg-red-500 text-white p-2 rounded-lg mb-2">Eliminar Ponente</button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={handleAddPonente} className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 mb-4">Añadir Ponente</button>
+                <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
+                  Enviar
+                </button>
+            </>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full bg-red-500 hover:bg-red-600 text-white font-bold p-3 rounded-lg rounded focus:outline-none focus:shadow-outline"
+          >
+            Cerrar sesión
+          </button>
+        </form>
+      </section>
+    ): (
+      <div className="container mx-auto text-center mt-8">
+        <h1 className="text-2xl font-bold mb-4">Lista de Resumen de Certificados</h1>
+        <p>Tiene que iniciar sesion para poder registrar un nuevo evento.</p>
+        <button
+          onClick={handlelogin}
+          className="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Login
+        </button>
+      </div>
+    )}
+    </>
+    
 
   )
 }
