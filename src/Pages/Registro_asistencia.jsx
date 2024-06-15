@@ -100,7 +100,11 @@ function Registro_asistencia() {
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ pdf: pdfBase64 })
+                    body: JSON.stringify({ 
+                        pdf: pdfBase64,
+                        correo: asistente.correo,
+                        nombredelevento: asistente.nombredelevento
+                    })
                 });
 
                 if (res.ok) {
