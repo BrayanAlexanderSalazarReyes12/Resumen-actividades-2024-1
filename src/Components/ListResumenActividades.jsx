@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { db } from '../database/firebase.js'; // Ajusta la ruta según la ubicación de tu archivo firebase.js
 import { collection, onSnapshot } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-
+import { Document, Page, Text, StyleSheet, View, pdf} from '@react-pdf/renderer';
+import { saveAs } from 'file-saver';
 
 const ListResumenActividades = ({ SetLogin, login }) => {
   const [certificados, setCertificados] = useState([]);
@@ -17,7 +18,8 @@ const ListResumenActividades = ({ SetLogin, login }) => {
     tieneCosto: '',
     duracionHoras: ''
   });
-
+  const [asistencia, setAsistencia] = useState([])
+  const [nombreactividad, SetNombreactividad] = useState([]) 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'certificados'), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -26,9 +28,16 @@ const ListResumenActividades = ({ SetLogin, login }) => {
       setFilteredCertificados(data);
     });
 
+    const asistencia = onSnapshot(collection(db, 'registros_asistente'), (snapshot) => {
+      const datacer = snapshot.docs.map(doc => ({...doc.data()}))
+      console.log('asistencia',datacer)
+      setAsistencia(datacer)
+    })
+
     // Cleanup function
     return () => {
       unsubscribe();
+      asistencia();
     };
   }, []);
 
@@ -70,6 +79,77 @@ const ListResumenActividades = ({ SetLogin, login }) => {
         return String(certificado[param]).toLowerCase().includes(searchParams[param].toLowerCase());
       });
     }));
+  };
+
+
+  const styles = StyleSheet.create({
+    page: {
+      flexDirection: 'column',
+      backgroundColor: '#ffffff',
+      padding: 30,
+    },
+    title: {
+      fontSize: 24,
+      textAlign: 'center',
+      marginBottom: 20,
+      fontWeight: 'bold',
+      color: '#333333',
+    },
+    section: {
+      margin: 10,
+      padding: 10,
+      flexGrow: 1,
+    },
+    text: {
+      fontSize: 16,
+      textAlign: 'center',
+      margin: 5,
+      color: '#555555',
+    },
+  });
+
+  const pdfasis = async () => {
+    try {
+      const Crearasistencia = (
+        <Document>
+          <Page style={styles.page}>
+            <View style={styles.section}>
+                <Text style={styles.title}>Certificado de Realización de Formulario Resumen Actividades 2024-1</Text>
+            </View>
+            <View style={styles.section}>
+                <Text style={styles.text}>Se certifica que el siguiente formulario ha sido completado con éxito:</Text>
+            </View>
+            <View style={styles.section}>
+                {/* Renderizar cada asistente */}
+                {filteredCertificados.map( certificado => (
+                  SetNombreactividad(certificado.nombreacti)
+                ))}
+                {asistencia
+                .filter(asistencia => nombreactividad == asistencia.nombredelevento)
+                .map( (asistencia, index) => (
+                  <View key={index} style={styles.section}>
+                    <Text style={styles.text}>Asistente {index + 1}:</Text>
+                    <Text style={styles.text}>Nombres y apellidos: {asistencia.nombreapellido}</Text>
+                    <Text style={styles.text}>Documento de identificación: {asistencia.numDocumentoidentificacion}</Text>
+                    <Text style={styles.text}>Estamento al que pertenece: {asistencia.Estamento}</Text>
+                    <Text style={styles.text}>Programa academico al que pertenece: {asistencia.Programaacademico}</Text>
+                    <Text style={styles.text}>Correo electronico: {asistencia.correo}</Text>
+                  </View>
+                ))}
+            </View>
+            <View style={styles.section}>
+                <Text style={styles.text}>Gracias por su participación.</Text>
+            </View>
+          </Page>
+        </Document>
+      );
+      const asPdf = pdf();
+      asPdf.updateContainer(Crearasistencia);
+      const asblob = await asPdf.toBlob();
+      saveAs(asblob, 'registro_asistencia.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
   };
 
   useEffect(() => {
@@ -216,18 +296,18 @@ const ListResumenActividades = ({ SetLogin, login }) => {
                 <td className="px-4 py-2">{certificado.apoyoComunicacion}</td>
                 <td className="px-4 py-2">
                   {certificado.qr != undefined ? 
-                      (
-                        <button
-                            onClick={() => handleDownload(certificado.qr)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                        >
-                            Descargar
-                        </button>
-                      ):
-                      (
-                        <p className=''>No cuenta con QR</p>
-                      )
-                    }
+                    (
+                      <button
+                          onClick={() => handleDownload(certificado.qr)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      >
+                          Descargar
+                      </button>
+                    ):
+                    (
+                      <p className=''>No cuenta con QR</p>
+                    )
+                  }
                 </td>
                 <td className="px-4 py-2">
                   {certificado.asistemciapdf != undefined ? 
@@ -240,7 +320,12 @@ const ListResumenActividades = ({ SetLogin, login }) => {
                       </button>
                     ):
                     (
-                      <p className=''>No cuenta con hoja de asistencia</p>
+                      <button
+                          onClick={() => pdfasis()}
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      >
+                          Descargar asistencia
+                      </button>
                     )
                   }
                 </td>
