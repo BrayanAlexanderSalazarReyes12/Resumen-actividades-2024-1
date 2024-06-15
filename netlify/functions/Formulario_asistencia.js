@@ -18,8 +18,8 @@ exports.handler = async (event, context) => {
             port: 465,
             secure: true, // usa SSL
             auth: {
-                user: "bsalazarr@unicartagena.edu.co", // dirección de Gmail
-                pass: "1234567890" // contraseña de aplicación generada en Google
+                user: "bsalazarreyes88@gmail.com", // dirección de Gmail
+                pass: "jkgo qxst dqen zsox" // contraseña de aplicación generada en Google
             }
         });
 
