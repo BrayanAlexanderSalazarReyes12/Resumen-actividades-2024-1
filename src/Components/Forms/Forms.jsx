@@ -308,7 +308,7 @@ function Forms() {
         
         console.log('form Data:', form);
         //restablece el formulario
-        //resetform();
+        resetform();
     }
 
     const handlecheckbox = (e) => {

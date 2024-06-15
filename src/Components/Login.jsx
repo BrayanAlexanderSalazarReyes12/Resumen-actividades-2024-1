@@ -4,7 +4,7 @@ import ListResumenActividades from "./ListResumenActividades";
 export const Login = () => {
   const [usuario, SetUsuario] = useState('')
   const [pass, SetPass] = useState('')
-  const [login, SetLogin] = useState(false)
+  const [login, SetLogin] = useState(localStorage.getItem('Login'))
 
   const handlesubmit = (e) => {
     e.preventDefault();
@@ -15,7 +15,7 @@ export const Login = () => {
   
   return (
     <>
-      {login ? (
+      {login == 'true' ? (
         <ListResumenActividades 
           SetLogin = {SetLogin}
           login = {login}

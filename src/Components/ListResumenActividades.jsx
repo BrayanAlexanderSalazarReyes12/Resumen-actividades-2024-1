@@ -192,6 +192,7 @@ const ListResumenActividades = ({ SetLogin, login }) => {
               <th className='px-4 py-2'>Para El Evento Nesesita</th>
               <th className="px-4 py-2">Espacio Fisico</th>
               <th className="px-4 py-2">Apoyo Comunicacion</th>
+              <th className='px-4 py-2'>QR</th>
               <th className="px-4 py-2">Asistencia</th>
               <th className='px-4 py-2'>Certificado</th>
             </tr>
@@ -213,6 +214,14 @@ const ListResumenActividades = ({ SetLogin, login }) => {
                 <td className="px-4 py-2">{certificado.nesesidades}</td>
                 <td className="px-4 py-2">{certificado.espacio}</td>
                 <td className="px-4 py-2">{certificado.apoyoComunicacion}</td>
+                <td className="px-4 py-2">
+                    <button
+                        onClick={() => handleDownload(certificado.qr)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    >
+                        Descargar
+                    </button>
+                </td>
                 <td className="px-4 py-2">
                   {certificado.asistemciapdf != undefined ? 
                     (
