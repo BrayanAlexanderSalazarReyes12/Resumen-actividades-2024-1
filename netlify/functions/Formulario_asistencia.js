@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
 
         // Opciones del correo electrónico
         let mailOptions = {
-            from: `"Sender Name" <bsalazarr@unicartagena.edu.co>`,
+            from: `"Registro de asistencia de los eventos" <bsalazarr@unicartagena.edu.co>`,
             to: params.correo,
             subject: `Certificado de asistencia ${params.nombredelevento}`,
             text: `Gracias por su participación en el evento. Adjunto encontrará el certificado de asistencia al evento ${params.nombredelevento}.`,
