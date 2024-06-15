@@ -13,10 +13,9 @@ exports.handler = async (event, context) => {
         console.log("RECIBI UNA SOLICITUD", params);
 
         // Validar que los parámetros necesarios están presentes y son válidos
-        if (!params.correo || !params.nombredelevento || !params.pdfBase64) {
+        if (!params.correo || !params.nombredelevento) {
             console.log(params.correo)
             console.log(params.nombredelevento)
-            console.log(params.pdfBase64)
             return {
                 statusCode: 400,
                 body: JSON.stringify({ message: "Faltan parámetros requeridos o son inválidos" })
