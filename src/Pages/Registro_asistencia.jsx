@@ -57,35 +57,42 @@ function Registro_asistencia() {
         const seleccionado = partes[2]; // Dependiendo de tu ruta específica    
 
        try {
-        const Certificadodeasistencia = (
-            <Document>
-              <Page style={styles.page}>
-                <View style={styles.section}>
-                    <Text style={styles.title}>Certificado de asistencia al evento </Text>
-                </View>
-                <View style={styles.section}>
-                    <Text style={styles.text}>Se certifica que el la persona asistio al evento:</Text>
-                </View>
-                <View style={styles.section}>
+            const Certificadodeasistencia = (
+                <Document>
+                <Page style={styles.page}>
                     <View style={styles.section}>
-                        <Text style={styles.text}>Nombres y apellidos: {asistente.nombreapellido}</Text>
-                        <Text style={styles.text}>Documento de identificación: {asistente.numDocumentoidentificacion}</Text>
-                        <Text style={styles.text}>Estamento al que pertenece: {asistente.Estamento}</Text>
-                        <Text style={styles.text}>Programa academico al que pertenece: {asistente.Programaacademico}</Text>
-                        <Text style={styles.text}>Correo electronico: {asistente.correo}</Text>
+                        <Text style={styles.title}>Certificado de asistencia al evento </Text>
                     </View>
-                </View>
-                <View style={styles.section}>
-                    <Text style={styles.text}>Gracias por su participación en el evento.</Text>
-                </View>
-              </Page>
-            </Document>
-          );
-          const asPdf = pdf();
-          asPdf.updateContainer(Certificadodeasistencia);
-          const asblob = await asPdf.toBlob();
-          saveAs(asblob, 'registro_asistencia.pdf');
+                    <View style={styles.section}>
+                        <Text style={styles.text}>Se certifica que el la persona asistio al evento:</Text>
+                    </View>
+                    <View style={styles.section}>
+                        <View style={styles.section}>
+                            <Text style={styles.text}>Nombres y apellidos: {asistente.nombreapellido}</Text>
+                            <Text style={styles.text}>Documento de identificación: {asistente.numDocumentoidentificacion}</Text>
+                            <Text style={styles.text}>Estamento al que pertenece: {asistente.Estamento}</Text>
+                            <Text style={styles.text}>Programa academico al que pertenece: {asistente.Programaacademico}</Text>
+                            <Text style={styles.text}>Correo electronico: {asistente.correo}</Text>
+                        </View>
+                    </View>
+                    <View style={styles.section}>
+                        <Text style={styles.text}>Gracias por su participación en el evento.</Text>
+                    </View>
+                </Page>
+                </Document>
+            );
+            const asPdf = pdf();
+            asPdf.updateContainer(Certificadodeasistencia);
+            const asblob = await asPdf.toBlob();
+            saveAs(asblob, 'registro_asistencia.pdf');
 
+            const res = await fetch(".netlify/functions/Formulario_asistencia")
+
+            if(res.ok)
+            {
+                console.log("exelente")
+            }
+            
             await addDoc(collection(db,"registros_asistente"),{
                 nombreapellido: asistente.nombreapellido,
                 numDocumentoidentificacion: asistente.numDocumentoidentificacion,
