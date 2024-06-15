@@ -1,15 +1,19 @@
 import { useState } from "react";
 import ListResumenActividades from "./ListResumenActividades";
+import { useNavigate } from "react-router-dom";
 
 export const Login = () => {
   const [usuario, SetUsuario] = useState('')
   const [pass, SetPass] = useState('')
   const [login, SetLogin] = useState(localStorage.getItem('Login'))
 
+  const navigate = useNavigate()
+
   const handlesubmit = (e) => {
     e.preventDefault();
     if(usuario == "Admin@gmail.com" && pass == "admin"){
-      SetLogin(true)
+      localStorage.setItem('Login',true)
+      navigate("/login")
     }
   }
   
