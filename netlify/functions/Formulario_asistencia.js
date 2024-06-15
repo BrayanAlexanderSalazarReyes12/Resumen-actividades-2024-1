@@ -32,7 +32,7 @@ exports.handler = async (event, context) => {
             attachments: [
                 {
                     filename: 'asistencia.pdf',
-                    content: params.pdfBase64,
+                    content: params.pdf,
                     encoding: 'base64'
                 }
             ]
