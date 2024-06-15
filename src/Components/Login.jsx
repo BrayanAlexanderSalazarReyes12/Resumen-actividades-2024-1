@@ -7,13 +7,11 @@ export const Login = () => {
   const [pass, SetPass] = useState('')
   const [login, SetLogin] = useState(localStorage.getItem('Login'))
 
-  const navigate = useNavigate()
+  
 
-  const handlesubmit = (e) => {
-    e.preventDefault();
+  const handlesubmit = () => {
     if(usuario == "Admin@gmail.com" && pass == "admin"){
       localStorage.setItem('Login',true)
-      navigate("/login")
     }
   }
   
