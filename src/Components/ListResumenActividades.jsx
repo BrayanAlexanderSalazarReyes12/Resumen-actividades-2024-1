@@ -215,12 +215,19 @@ const ListResumenActividades = ({ SetLogin, login }) => {
                 <td className="px-4 py-2">{certificado.espacio}</td>
                 <td className="px-4 py-2">{certificado.apoyoComunicacion}</td>
                 <td className="px-4 py-2">
-                    <button
-                        onClick={() => handleDownload(certificado.qr)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    >
-                        Descargar
-                    </button>
+                  {certificado.qr != undefined ? 
+                      (
+                        <button
+                            onClick={() => handleDownload(certificado.qr)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        >
+                            Descargar
+                        </button>
+                      ):
+                      (
+                        <p className=''>No cuenta con QR</p>
+                      )
+                    }
                 </td>
                 <td className="px-4 py-2">
                   {certificado.asistemciapdf != undefined ? 
