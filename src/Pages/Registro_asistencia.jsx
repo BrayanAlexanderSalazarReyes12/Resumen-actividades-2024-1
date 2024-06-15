@@ -56,7 +56,7 @@ function Registro_asistencia() {
         const partes = location.pathname.split('/');
         const seleccionado = partes[2]; // Dependiendo de tu ruta específica    
 
-       try {
+        try {
             const Certificadodeasistencia = (
                 <Document>
                 <Page style={styles.page}>
@@ -64,15 +64,15 @@ function Registro_asistencia() {
                         <Text style={styles.title}>Certificado de asistencia al evento </Text>
                     </View>
                     <View style={styles.section}>
-                        <Text style={styles.text}>Se certifica que el la persona asistio al evento:</Text>
+                        <Text style={styles.text}>Se certifica que la persona asistió al evento:</Text>
                     </View>
                     <View style={styles.section}>
                         <View style={styles.section}>
                             <Text style={styles.text}>Nombres y apellidos: {asistente.nombreapellido}</Text>
                             <Text style={styles.text}>Documento de identificación: {asistente.numDocumentoidentificacion}</Text>
                             <Text style={styles.text}>Estamento al que pertenece: {asistente.Estamento}</Text>
-                            <Text style={styles.text}>Programa academico al que pertenece: {asistente.Programaacademico}</Text>
-                            <Text style={styles.text}>Correo electronico: {asistente.correo}</Text>
+                            <Text style={styles.text}>Programa académico al que pertenece: {asistente.Programaacademico}</Text>
+                            <Text style={styles.text}>Correo electrónico: {asistente.correo}</Text>
                         </View>
                     </View>
                     <View style={styles.section}>
@@ -83,38 +83,56 @@ function Registro_asistencia() {
             );
             const asPdf = pdf();
             asPdf.updateContainer(Certificadodeasistencia);
-            const asblob = await asPdf.toBlob();
-            saveAs(asblob, 'registro_asistencia.pdf');
-
-            const res = await fetch(".netlify/functions/Formulario_asistencia")
-
-            if(res.ok)
-            {
-                console.log("exelente")
-            }
+            const asBlob = await asPdf.toBlob();
             
-            await addDoc(collection(db,"registros_asistente"),{
-                nombreapellido: asistente.nombreapellido,
-                numDocumentoidentificacion: asistente.numDocumentoidentificacion,
-                Estamento:asistente.Estamento,
-                Programaacademico:asistente.Programaacademico,
-                correo:asistente.correo,
-                nombredelevento:seleccionado
-            });
-            console.log('Información del certificado guardada en Firestore.');
+            // Convert PDF to Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(asBlob);
+            reader.onloadend = async () => {
+                const pdfBase64 = reader.result.split(',')[1]; // Get Base64 string
 
-            setAsistente({
-                nombreapellido: '',
-                numDocumentoidentificacion: '',
-                Estamento: '',
-                Programaacademico: '',
-                correo: '',
-            })
-       } catch (error) {
-        console.error('Error al subir el PDF a Firebase Storage:', error);
-       }
+                // Save PDF locally
+                saveAs(asBlob, 'registro_asistencia.pdf');
 
-        
+                // Send PDF in a POST request
+                const res = await fetch(".netlify/functions/Formulario_asistencia", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ pdf: pdfBase64 })
+                });
+
+                if (res.ok) {
+                    console.log("PDF enviado exitosamente");
+                } else {
+                    console.error("Error al enviar el PDF");
+                }
+
+                // Save attendee information to Firestore
+                await addDoc(collection(db, "registros_asistente"), {
+                    nombreapellido: asistente.nombreapellido,
+                    numDocumentoidentificacion: asistente.numDocumentoidentificacion,
+                    Estamento: asistente.Estamento,
+                    Programaacademico: asistente.Programaacademico,
+                    correo: asistente.correo,
+                    nombredelevento: seleccionado
+                });
+                console.log('Información del certificado guardada en Firestore.');
+
+                // Reset form
+                setAsistente({
+                    nombreapellido: '',
+                    numDocumentoidentificacion: '',
+                    Estamento: '',
+                    Programaacademico: '',
+                    correo: ''
+                });
+            };
+        } catch (error) {
+            console.error('Error al manejar la asistencia:', error);
+        }
+    
     }
 
   return (
