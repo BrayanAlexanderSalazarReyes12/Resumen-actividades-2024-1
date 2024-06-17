@@ -167,6 +167,12 @@ const ListResumenActividades = ({ SetLogin, login }) => {
         >
           Cerrar sesión
         </button>
+        <button
+          onClick={handleRegistrarEvento}
+          className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Registrar nuevo evento
+        </button>
       </div>
     );
   }
