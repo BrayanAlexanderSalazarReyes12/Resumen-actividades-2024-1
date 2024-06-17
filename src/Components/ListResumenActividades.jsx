@@ -169,7 +169,7 @@ const ListResumenActividades = ({ SetLogin, login }) => {
         </button>
         <button
           onClick={handleRegistrarEvento}
-          className="ml-3 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="ml-8 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
           Registrar nuevo evento
         </button>
