@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import QRCode from 'qrcode';
 import { Document, Page, Text, StyleSheet, View, pdf, Image } from '@react-pdf/renderer';
 import { db, storage} from "../../database/firebase";
@@ -27,7 +27,7 @@ function Forms() {
         nesesidades: [],
         espacio: '',
         apoyoComunicacion: '',
-        ponentes: [{ ponente: '', documento: '', numDocumento: '', Nombres: '', PrimerApellido: '', SegundoApellido: '', Niveldeformacion: '', Vinculacion: '' }],
+        ponentes: [{ ponente: '', documento: '', numDocumento: '', Nombres: '', PrimerApellido: '', SegundoApellido: '', Niveldeformacion: '', Vinculacion: '', claseponente: '', pais: '', horas: '' }],
         asistemciapdf: null,
         asistente: [{nombreapellido: '',numDocumentoidentificacion: '',Estamento: '',Programaacademico: '',email: ''}],
         correo: '',
@@ -35,8 +35,11 @@ function Forms() {
         Estamento: '',
         numDocumentoidentificacion: '',
         nombreapellido: '',
-        Vinculacion: ''
+        Vinculacion: '',
+        conferencista: [{ conferencista: '', documento: '', numDocumento: '', Nombres: '', PrimerApellido: '', SegundoApellido: '', Niveldeformacion: '', Vinculacion: '', claseconferencista: '', pais: '', horas: '' }]
     })
+
+    const [totalHoras, setTotalHoras] = useState(0);
 
     const styles = StyleSheet.create({
         page: {
@@ -119,6 +122,8 @@ function Forms() {
                 {form.ponentes.map((ponente, index) => (
                   <View key={index} style={styles.section}>
                     <Text style={styles.text}>Ponente {index + 1}:</Text>
+                    <Text style={styles.text}>Clase de ponente: {ponente.claseponente}</Text>
+                    {ponente.claseponente == "Internacional" && <Text style={styles.text}>Pais del ponente: {ponente.pais}</Text>}
                     <Text style={styles.text}>Descripción: {ponente.ponente}</Text>
                     <Text style={styles.text}>Tipo de documento: {ponente.documento}</Text>
                     <Text style={styles.text}>Número de documento: {ponente.numDocumento}</Text>
@@ -127,6 +132,24 @@ function Forms() {
                     <Text style={styles.text}>Segundo apellido: {ponente.SegundoApellido}</Text>
                     <Text style={styles.text}>Nivel de formación: {ponente.Niveldeformacion}</Text>
                     <Text style={styles.text}>Tipo de vinculación: {ponente.Vinculacion}</Text>
+                    <Text style={styles.text}>Hora de duraccion: {ponente.horas}</Text>
+                  </View>
+                ))}
+                {/* Renderizar cada conferencista */}
+                {form.conferencista.map((conferencista, index_conf) => (
+                  <View key={index_conf} style={styles.section}>
+                    <Text style={styles.text}>Conferencista {index_conf + 1}:</Text>
+                    <Text style={styles.text}>Clase de conferencista: {conferencista.claseconferencista}</Text>
+                    {conferencista.claseconferencista == "Internacional" && <Text style={styles.text}>Pais del conferencista: {conferencista.pais_conf}</Text>}
+                    <Text style={styles.text}>Descripción: {conferencista.ponente}</Text>
+                    <Text style={styles.text}>Tipo de documento: {conferencista.documento}</Text>
+                    <Text style={styles.text}>Número de documento: {conferencista.numDocumento}</Text>
+                    <Text style={styles.text}>Nombres: {conferencista.Nombres}</Text>
+                    <Text style={styles.text}>Primer apellido: {conferencista.PrimerApellido}</Text>
+                    <Text style={styles.text}>Segundo apellido: {conferencista.SegundoApellido}</Text>
+                    <Text style={styles.text}>Nivel de formación: {conferencista.Niveldeformacion}</Text>
+                    <Text style={styles.text}>Tipo de vinculación: {conferencista.Vinculacion}</Text>
+                    <Text style={styles.text}>Hora de duraccion: {conferencista.horas}</Text>
                   </View>
                 ))}
                 {/* Renderizar cada asistente */}
@@ -148,16 +171,21 @@ function Forms() {
         </Document>
     )
     
-    const handleChange = (e, index = null, index_asis = null) => {
+    const handleChange = (e, index = null, index_asis = null, idex_conf = null) => {
       const {name, value} = e.target;
       if(index !== null){
         const newPonentes = [...form.ponentes];
         newPonentes[index][name] = value;
         SetForm({...form, ponentes: newPonentes})
+        
       }else if(index_asis !== null){
         const newAsistente = [...form.asistente];
         newAsistente[index_asis][name] = value;
         SetForm({...form, asistente: newAsistente})
+      }else if(idex_conf !== null){
+        const newConferencista = [...form.conferencista];
+        newConferencista[idex_conf][name] = value;
+        SetForm({...form, conferencista: newConferencista})
       }else{
         SetForm({
           ...form,
@@ -170,7 +198,7 @@ function Forms() {
         e.preventDefault();
         SetStep(step + 1)
     }
-    
+  
     const resetform = () => {
       SetForm({
         fechaDiligenciamiento: '',
@@ -189,7 +217,7 @@ function Forms() {
         nesesidades: [],
         espacio: '',
         apoyoComunicacion: '',
-        ponentes: '',
+        ponentes: [],
         documento: '',
         numDocumento: '',
         Nombres: '',
@@ -202,7 +230,8 @@ function Forms() {
         Estamento: '',
         numDocumentoidentificacion: '',
         nombreapellido: '',
-        Vinculacion: ''
+        Vinculacion: '',
+        conferencista: []
       })
     }
 
@@ -249,7 +278,7 @@ function Forms() {
         saveAs(asblob, 'registro_asistencia.pdf');
         
         const fileName_qr = 'registro_asistencia.pdf'
-
+        
         try {
             // Obtener el nombre del usuario (supongamos que está en el estado `form.nombreActividad`)
             const nombreUsuario = form.nombreActividad + form.codigoActividad; // Reemplaza esto con tu lógica para obtener el nombre del usuario
@@ -290,12 +319,13 @@ function Forms() {
               salonPosgrado: form.salonPosgrado,
               tieneCosto: form.tieneCosto,
               monto: form.monto,
-              duracionHoras: form.duracionHoras,
+              duracionHoras: totalHoras,
               espacioFisico: form.espacioFisico,
               nesesidades: text_nesesidades,
               espacio: text_espaciofisico,
               apoyoComunicacion : text_apoyocomunicacion,
               ponentes: form.ponentes,
+              conferencista: form.conferencista,
               certificado: downloadURL,
               qr: downloadURLqr
             });
@@ -305,7 +335,6 @@ function Forms() {
         } catch (error) {
             console.error('Error al subir el PDF a Firebase Storage:', error);
         }
-        
         console.log('form Data:', form);
         //restablece el formulario
         resetform();
@@ -322,18 +351,30 @@ function Forms() {
     const handleAddPonente = () => {
       SetForm({
         ...form,
-        ponentes: [...form.ponentes, { ponente: '', documento: '', numDocumento: '', Nombres: '', PrimerApellido: '', SegundoApellido: '', Niveldeformacion: '', Vinculacion: '' }]
+        ponentes: [...form.ponentes, { ponente: '', documento: '', numDocumento: '', Nombres: '', PrimerApellido: '', SegundoApellido: '', Niveldeformacion: '', Vinculacion: '', horas: '' }]
       })
     }
 
     const handleRemovePonente = index => {
       const newPonente = form.ponentes.filter((_, i) => i !== index);
-      SetForm({...form, ponentes: newPonente})
+      SetForm({...form, ponentes: newPonente});
+    }
+
+    const handleAddconferencista = () => {
+      SetForm({
+        ...form,
+        conferencista: [...form.conferencista, { ponente: '', documento: '', numDocumento: '', Nombres: '', PrimerApellido: '', SegundoApellido: '', Niveldeformacion: '', Vinculacion: '', claseconferencista: '', pais: '', horas: '' }]
+      })
+    }
+
+    const handleRemoveconferencista = index => {
+      const newConferencista = form.conferencista.filter((_, i) => i !== index);
+      SetForm({...form, conferencista: newConferencista})
     }
 
 
     const options = [
-      { id: 1, label: 'Bombos' },
+      { id: 1, label: 'Biombos' },
       { id: 2, label: 'Mesas' },
       { id: 3, label: 'Sillas' },
       { id: 4, label: 'Arañas' }
@@ -368,6 +409,18 @@ function Forms() {
       navigate('/login')
     }
 
+    useEffect(() => {
+      let total = 0
+      form.ponentes.forEach(item => {
+        total += parseFloat(item.horas) || 0;
+      });
+      form.conferencista.forEach(item => {
+        total += parseFloat(item.horas) || 0;
+      });
+      console.log(total)
+      setTotalHoras(total)
+    }, [form.ponentes,form.conferencista]);
+
     let login = localStorage.getItem('Login')
     
   return (
@@ -375,7 +428,7 @@ function Forms() {
     {login == 'true' ? (
       <section className="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-lg shadow-lg mt-10 mb-10">
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Resumen actividades 2024-1</h1>
-        <form onSubmit={step == 3 ? handleSubmit : handlenext} className="space-y-6">
+        <form onSubmit={step == 4 ? handleSubmit : handlenext} className="space-y-6">
           {step === 1 && (
             <>
               <div>
@@ -616,6 +669,32 @@ function Forms() {
                       placeholder="Descripción (Opcional)"
                       className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
                     />
+                    <div>
+                    <label className="block mb-2 font-medium text-gray-700">Clase de ponente<span className="text-red-500">*</span></label>
+                    <select 
+                      value={ponente.claseponente} 
+                      onChange={e => handleChange(e, index)}
+                      name="claseponente"
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="Nacional">Nacional</option>
+                      <option value="Internacional">Internacional</option>
+                    </select>
+                    {ponente.claseponente == "Internacional" && (
+                      <>
+                      <label className="block mb-2 font-medium text-gray-700">Pais del ponente</label>
+                      <input
+                        type="text"
+                        name="pais"
+                        value={ponente.pais}
+                        onChange={e => handleChange(e, index)}
+                        placeholder="Pais de origen del ponente internacional"
+                        className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                      />
+                      </>
+                    )}
+                  </div>
                     <label className="block mb-2 font-medium text-gray-700">Tipo de documento<span className="text-red-500">*</span></label>
                     <input
                       type="text"
@@ -682,12 +761,149 @@ function Forms() {
                       required
                       className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
                     />
+                    <label className="block mb-2 font-medium text-gray-700">Duracion del ponente<span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      name="horas"
+                      placeholder="Horas"
+                      value={ponente.horas}
+                      onChange={e => handleChange(e, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
                     {form.ponentes.length > 1 && (
                       <button type="button" onClick={() => handleRemovePonente(index)} className="bg-red-500 text-white p-2 rounded-lg mb-2">Eliminar Ponente</button>
                     )}
                   </div>
                 ))}
                 <button type="button" onClick={handleAddPonente} className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 mb-4">Añadir Ponente</button>
+                <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
+                  Siguiente
+                </button>
+            </>
+          )}
+          {step === 4 && (
+            <>
+              <label className="block mb-2 font-medium text-gray-700">Conferencista del evento</label>
+                {form.conferencista.map((conferencista, index) => (
+                  <div key={index} className="mb-4">
+                    <label className="block mb-2 font-medium text-gray-700">Descripcion de los Coferencista</label>
+                    <input
+                      type="text"
+                      name="conferencista"
+                      value={conferencista.conferencista}
+                      onChange={e => handleChange(e, null, null,index)}
+                      placeholder="Descripción (Opcional)"
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <div>
+                    <label className="block mb-2 font-medium text-gray-700">Clase de conferencista<span className="text-red-500">*</span></label>
+                    <select 
+                      value={conferencista.claseconferencista} 
+                      onChange={e => handleChange(e, null, null, index)}
+                      name="claseconferencista"
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="Nacional">Nacional</option>
+                      <option value="Internacional">Internacional</option>
+                    </select>
+                    {conferencista.claseconferencista == "Internacional" && (
+                      <>
+                      <label className="block mb-2 font-medium text-gray-700">Pais del conferencista</label>
+                      <input
+                        type="text"
+                        name="pais"
+                        value={conferencista.pais}
+                        onChange={e => handleChange(e, null, null, index)}
+                        placeholder="Pais de origen del ponente internacional"
+                        className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                      />
+                      </>
+                    )}
+                  </div>
+                    <label className="block mb-2 font-medium text-gray-700">Tipo de documento<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="documento"
+                      value={conferencista.documento}
+                      onChange={e => handleChange(e, null, null, index)}
+                      placeholder="C.C, C.E, Pasaporte, T.I"
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Numero de documento<span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      name="numDocumento"
+                      value={conferencista.numDocumento}
+                      onChange={e => handleChange(e, null, null, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Nombres<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="Nombres"
+                      value={conferencista.Nombres}
+                      onChange={e => handleChange(e, null, null, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Primer Apellido<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="PrimerApellido"
+                      value={conferencista.PrimerApellido}
+                      onChange={e => handleChange(e, null, null, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Segundo Apellido<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="SegundoApellido"
+                      value={conferencista.SegundoApellido}
+                      onChange={e => handleChange(e, null, null, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Nivel de formacion<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="Niveldeformacion"
+                      value={conferencista.Niveldeformacion}
+                      onChange={e => handleChange(e, null, null, index)}
+                      placeholder="Profesional, Especialista, Magister, Doctorado, Posdoctorado"
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Tipo de vinculacion<span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="Vinculacion"
+                      value={conferencista.Vinculacion}
+                      onChange={e => handleChange(e, null, null, index)}
+                      placeholder="Profesor de planta, Profesor ocacionales, Profesor de catedra, Externo internacional, Externo nacional"
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    <label className="block mb-2 font-medium text-gray-700">Duracion del ponente<span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      name="horas"
+                      placeholder="Horas"
+                      value={conferencista.horas}
+                      onChange={e => handleChange(e, null, null, index)}
+                      required
+                      className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300 mb-2"
+                    />
+                    {form.conferencista.length > 1 && (
+                      <button type="button" onClick={() => handleRemoveconferencista(index)} className="bg-red-500 text-white p-2 rounded-lg mb-2">Eliminar Conferencista</button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={handleAddconferencista} className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 mb-4">Añadir Conferencista</button>
                 <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
                   Enviar
                 </button>

@@ -108,8 +108,12 @@ const ListResumenActividades = ({ SetLogin, login }) => {
     },
   });
 
-  const pdfasis = async () => {
+  const nombres = filteredCertificados.map(certificado => certificado.nombreacti);
+
+  const pdfasis = async (nombreevento) => {
     try {
+      // Filtrar la asistencia por el nombre del evento
+      const asistenciaFiltrada = asistencia.filter(asistencia => asistencia.nombredelevento === nombreevento);
       const Crearasistencia = (
         <Document>
           <Page style={styles.page}>
@@ -121,12 +125,7 @@ const ListResumenActividades = ({ SetLogin, login }) => {
             </View>
             <View style={styles.section}>
                 {/* Renderizar cada asistente */}
-                {filteredCertificados.map( certificado => (
-                  SetNombreactividad(certificado.nombreacti)
-                ))}
-                {asistencia
-                .filter(asistencia => nombreactividad == asistencia.nombredelevento)
-                .map( (asistencia, index) => (
+                {asistenciaFiltrada.map((asistencia, index) => (
                   <View key={index} style={styles.section}>
                     <Text style={styles.text}>Asistente {index + 1}:</Text>
                     <Text style={styles.text}>Nombres y apellidos: {asistencia.nombreapellido}</Text>
@@ -151,6 +150,73 @@ const ListResumenActividades = ({ SetLogin, login }) => {
       console.error('Error generating PDF:', error);
     }
   };
+
+  const enviarcorreo = async (nombreevento) => {
+    try {
+      const asistenciaFiltrada = asistencia.filter(asistencia => asistencia.nombredelevento === nombreevento);
+      
+      for (let i=0; i<asistenciaFiltrada.length; i++){
+        const asistencia = asistenciaFiltrada[i];
+        const Certificadodeasistencia = (
+          <Document>
+            <Page style={styles.page}>
+                <View style={styles.section}>
+                    <Text style={styles.title}>Certificado de asistencia al evento </Text>
+                </View>
+                <View style={styles.section}>
+                    <Text style={styles.text}>Se certifica que la persona asistió al evento:</Text>
+                </View>
+                <View style={styles.section}>
+                    <View style={styles.section}>
+                        <Text style={styles.text}>Nombres y apellidos: {asistencia.nombreapellido}</Text>
+                        <Text style={styles.text}>Documento de identificación: {asistencia.numDocumentoidentificacion}</Text>
+                        <Text style={styles.text}>Estamento al que pertenece: {asistencia.Estamento}</Text>
+                        <Text style={styles.text}>Programa académico al que pertenece: {asistencia.Programaacademico}</Text>
+                        <Text style={styles.text}>Correo electrónico: {asistencia.correo}</Text>
+                    </View>
+                </View>
+                <View style={styles.section}>
+                    <Text style={styles.text}>Gracias por su participación en el evento.</Text>
+                </View>
+            </Page>
+          </Document>
+        );
+        const asPdf = pdf();
+        asPdf.updateContainer(Certificadodeasistencia);
+        const asBlob = await asPdf.toBlob();
+        // Convert PDF to Base64
+        const reader = new FileReader();
+        reader.readAsDataURL(asBlob);
+        reader.onloadend = async () => {
+            const pdfBase64 = reader.result.split(',')[1]; // Get Base64 string
+
+            // Save PDF locally
+            //saveAs(asBlob, 'registro_asistencia.pdf');
+
+            // Send PDF in a POST request
+            const res = await fetch("https://resumendeactividades2024-1.netlify.app/.netlify/functions/Enviar_asistencia_evento", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    correo: asistencia.correo,
+                    nombredelevento: asistencia.seleccionado,
+                    pdf: pdfBase64
+                })
+            });
+
+            if (res.ok) {
+                console.log("PDF enviado exitosamente");
+            } else {
+                console.error("Error al enviar el PDF");
+            }
+        };
+      }
+    } catch (error) {
+      console.error('Error al manejar la asistencia:', error);
+    }
+  }
 
   useEffect(() => {
     filterCertificados();
@@ -281,6 +347,7 @@ const ListResumenActividades = ({ SetLogin, login }) => {
               <th className='px-4 py-2'>QR</th>
               <th className="px-4 py-2">Asistencia</th>
               <th className='px-4 py-2'>Certificado</th>
+              <th className='px-4 py-2'>Enviar Correos</th>
             </tr>
           </thead>
           <tbody>
@@ -327,7 +394,7 @@ const ListResumenActividades = ({ SetLogin, login }) => {
                     ):
                     (
                       <button
-                          onClick={() => pdfasis()}
+                          onClick={() => pdfasis(certificado.nombreacti)}
                           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                       >
                           Descargar asistencia
@@ -341,6 +408,14 @@ const ListResumenActividades = ({ SetLogin, login }) => {
                         className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                     >
                         Descargar
+                    </button>
+                </td>
+                <td className="px-4 py-2">
+                    <button
+                        onClick={() => enviarcorreo(certificado.nombreacti)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    >
+                        Destinatarios
                     </button>
                 </td>
               </tr>

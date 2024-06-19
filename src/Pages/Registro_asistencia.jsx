@@ -92,7 +92,7 @@ function Registro_asistencia() {
                 const pdfBase64 = reader.result.split(',')[1]; // Get Base64 string
 
                 // Save PDF locally
-                saveAs(asBlob, 'registro_asistencia.pdf');
+                //saveAs(asBlob, 'registro_asistencia.pdf');
 
                 // Send PDF in a POST request
                 const res = await fetch("https://resumendeactividades2024-1.netlify.app/.netlify/functions/Formulario_asistencia", {
@@ -100,8 +100,7 @@ function Registro_asistencia() {
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ 
-                        pdf: pdfBase64,
+                    body: JSON.stringify({
                         correo: asistente.correo,
                         nombredelevento: seleccionado
                     })

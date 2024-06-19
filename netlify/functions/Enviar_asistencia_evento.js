@@ -28,7 +28,14 @@ exports.handler = async (event, context) => {
             from: `"Registro de asistencia de los eventos" <registrodeeventos89@gmail.com>`,
             to: params.correo,
             subject: `Certificado de asistencia ${params.nombredelevento}`,
-            text: `Gracias por su participación en el evento. El certificado de asistencia se lo enviaremos al momento de terminar el evento ${params.nombredelevento}.`
+            text: `Gracias por su participación en el evento. Adjunto encontrará el certificado de asistencia al evento ${params.nombredelevento}.`,
+            attachments: [
+                {
+                    filename: 'asistencia.pdf',
+                    content: params.pdf,
+                    encoding: 'base64'
+                }
+            ]
         };
 
         // Enviar el correo electrónico
