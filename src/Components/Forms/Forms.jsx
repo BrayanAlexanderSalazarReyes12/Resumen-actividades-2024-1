@@ -568,17 +568,6 @@ function Forms() {
                   />
                 </div>
               )}
-              <div>
-                <label className="block mb-2 font-medium text-gray-700">Duración en horas<span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  name="duracionHoras"
-                  value={form.duracionHoras}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 p-2 sm:p-3 rounded-lg focus:ring focus:ring-blue-300"
-                />
-              </div>
               <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
                 Siguiente
               </button>

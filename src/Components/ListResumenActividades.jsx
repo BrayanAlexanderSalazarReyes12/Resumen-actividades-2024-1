@@ -201,7 +201,7 @@ const ListResumenActividades = ({ SetLogin, login }) => {
                 },
                 body: JSON.stringify({
                     correo: asistencia.correo,
-                    nombredelevento: asistencia.seleccionado,
+                    nombredelevento: asistencia.nombredelevento,
                     pdf: pdfBase64
                 })
             });
